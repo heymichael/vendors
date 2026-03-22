@@ -1,0 +1,152 @@
+import { useMemo, useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
+import { initializeApp, getApp, getApps, type FirebaseApp } from 'firebase/app'
+import {
+  browserLocalPersistence,
+  getAuth,
+  onAuthStateChanged,
+  setPersistence,
+  signOut,
+  type User,
+} from 'firebase/auth'
+import { fetchUserDoc, buildDisplayName, hasAppAccess, getAccessibleApps, APP_CATALOG } from './accessPolicy'
+import { getAuthRuntimeConfig } from './runtimeConfig'
+import { AuthUserContext } from './AuthUserContext'
+import { Button } from '@haderach/shared-ui'
+
+const PLATFORM_SIGN_IN_URL = '/'
+const APP_PATH = '/vendors/'
+
+interface AuthGateProps {
+  children: ReactNode
+}
+
+function getFirebaseAppInstance(): FirebaseApp | null {
+  const runtimeConfig = getAuthRuntimeConfig()
+  if (!runtimeConfig.firebaseConfig) {
+    return null
+  }
+  if (getApps().length > 0) {
+    return getApp()
+  }
+  return initializeApp(runtimeConfig.firebaseConfig)
+}
+
+type AuthStatus = 'loading' | 'redirecting' | 'authorized' | 'unauthorized' | 'config_error'
+
+export function AuthGate({ children }: AuthGateProps) {
+  const runtimeConfig = useMemo(() => getAuthRuntimeConfig(), [])
+  const [user, setUser] = useState<User | null>(null)
+  const [roles, setRoles] = useState<string[]>([])
+  const [displayName, setDisplayName] = useState<string | undefined>()
+  const [status, setStatus] = useState<AuthStatus>(() => {
+    if (runtimeConfig.bypassAuth) {
+      return 'authorized'
+    }
+    if (runtimeConfig.configError) {
+      return 'config_error'
+    }
+    return 'loading'
+  })
+  const [authBusy, setAuthBusy] = useState(false)
+
+  useEffect(() => {
+    if (runtimeConfig.bypassAuth || runtimeConfig.configError) {
+      return
+    }
+    const app = getFirebaseAppInstance()
+    if (!app) {
+      setStatus('config_error')
+      return
+    }
+    const auth = getAuth(app)
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser)
+      if (!nextUser) {
+        setStatus('redirecting')
+        window.location.replace(
+          `${PLATFORM_SIGN_IN_URL}?returnTo=${encodeURIComponent(APP_PATH)}`,
+        )
+        return
+      }
+      setStatus('loading')
+      fetchUserDoc(app, nextUser.email ?? '').then((userDoc) => {
+        const fetchedRoles = userDoc.roles
+        setRoles(fetchedRoles)
+        setDisplayName(buildDisplayName(userDoc.firstName, userDoc.lastName))
+        if (hasAppAccess(fetchedRoles)) {
+          setStatus('authorized')
+        } else {
+          setStatus('unauthorized')
+        }
+      })
+    })
+    setPersistence(auth, browserLocalPersistence).catch(() => {})
+    return unsubscribe
+  }, [runtimeConfig.bypassAuth, runtimeConfig.configError])
+
+  const signOutCurrentUser = async () => {
+    const app = getFirebaseAppInstance()
+    if (!app) {
+      setStatus('config_error')
+      return
+    }
+    setAuthBusy(true)
+    try {
+      await signOut(getAuth(app))
+    } finally {
+      setAuthBusy(false)
+    }
+  }
+
+  if (status === 'authorized') {
+    const accessibleApps = runtimeConfig.bypassAuth ? APP_CATALOG : getAccessibleApps(roles)
+    return (
+      <AuthUserContext.Provider
+        value={{
+          email: user?.email ?? (runtimeConfig.bypassAuth ? 'dev@haderach.ai' : ''),
+          photoURL: user?.photoURL ?? undefined,
+          displayName: runtimeConfig.bypassAuth ? 'Dev User' : displayName,
+          accessibleApps,
+          signOut: signOutCurrentUser,
+        }}
+      >
+        {children}
+      </AuthUserContext.Provider>
+    )
+  }
+
+  if (status === 'loading' || status === 'redirecting') {
+    return null
+  }
+
+  return (
+    <main className="auth-gate-shell">
+      <section className="auth-gate-card" aria-live="polite">
+        {status === 'config_error' ? (
+          <>
+            <h1>Unavailable</h1>
+            <p>
+              Authentication is unavailable because runtime configuration is missing. Please contact
+              your administrator.
+            </p>
+          </>
+        ) : (
+          <>
+            <h1>Access denied</h1>
+            <p>
+              You are signed in as <strong>{user?.email || 'unknown user'}</strong>, but your
+              account does not have access to this application.
+            </p>
+            <p>Please contact your administrator to be granted access.</p>
+            <div className="auth-gate-actions">
+              <Button onClick={signOutCurrentUser} disabled={authBusy}>
+                Sign out
+              </Button>
+            </div>
+          </>
+        )}
+      </section>
+    </main>
+  )
+}

@@ -1,0 +1,63 @@
+import { doc, getDoc, getFirestore } from 'firebase/firestore'
+import type { FirebaseApp } from 'firebase/app'
+
+const APP_ID = 'vendors'
+
+const APP_GRANTING_ROLES: Record<string, string[]> = {
+  card: ['admin', 'member', 'card_member'],
+  stocks: ['admin', 'member', 'stocks_member'],
+  vendors: ['admin', 'member', 'vendors_member'],
+}
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
+
+export interface UserDoc {
+  roles: string[]
+  firstName: string
+  lastName: string
+}
+
+export async function fetchUserDoc(app: FirebaseApp, email: string): Promise<UserDoc> {
+  const empty: UserDoc = { roles: [], firstName: '', lastName: '' }
+  try {
+    const db = getFirestore(app)
+    const snap = await getDoc(doc(db, 'users', normalizeEmail(email)))
+    if (!snap.exists()) return empty
+    const data = snap.data()
+    return {
+      roles: Array.isArray(data.roles) ? data.roles : [],
+      firstName: typeof data.first_name === 'string' ? data.first_name : '',
+      lastName: typeof data.last_name === 'string' ? data.last_name : '',
+    }
+  } catch {
+    return empty
+  }
+}
+
+export function buildDisplayName(firstName: string, lastName: string): string | undefined {
+  const full = [firstName, lastName].filter(Boolean).join(' ')
+  return full || undefined
+}
+
+export function hasAppAccess(userRoles: string[], appId: string = APP_ID): boolean {
+  const grantingRoles = APP_GRANTING_ROLES[appId] ?? []
+  return userRoles.some((role) => grantingRoles.includes(role))
+}
+
+export interface AccessibleApp {
+  id: string
+  label: string
+  path: string
+}
+
+export const APP_CATALOG: AccessibleApp[] = [
+  { id: 'card', label: 'Card', path: '/card/' },
+  { id: 'stocks', label: 'Stocks', path: '/stocks/' },
+  { id: 'vendors', label: 'Vendors', path: '/vendors/' },
+]
+
+export function getAccessibleApps(userRoles: string[]): AccessibleApp[] {
+  return APP_CATALOG.filter((app) => hasAppAccess(userRoles, app.id))
+}
