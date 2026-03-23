@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { DataTable } from '@haderach/shared-ui';
 import { buildVendorColumns } from './vendor-columns';
 import { VendorDetail } from './VendorDetail';
-import type { VendorInfo } from './vendor-data';
+import type { VendorInfo } from './types';
 
 interface VendorListProps {
   vendors: VendorInfo[];

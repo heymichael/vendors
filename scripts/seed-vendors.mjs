@@ -1,29 +1,19 @@
-export type VendorStatus = 'active' | 'inactive' | 'trial';
-export type BillingCycle = 'monthly' | 'annual' | 'usage-based';
-export type PaymentMethod = 'credit-card' | 'invoice' | 'ach' | 'wire';
+#!/usr/bin/env node
 
-export interface VendorInfo {
-  id: string;
-  name: string;
-  category: string;
-  status: VendorStatus;
-  billingCycle: BillingCycle;
-  paymentMethod: PaymentMethod;
-  contractRenews?: string;
-  accountId?: string;
-  billingContact?: string;
-  notes?: string;
-  internalContact?: string;
-  dataSource?: string;
-  vendorContact?: string;
-  supportPhone?: string;
-  supportEmail?: string;
-  billingAddress?: string;
-  website?: string;
-  loginUrl?: string;
-}
+/**
+ * One-time seed script: writes the five initial vendors to the Firestore
+ * `vendors` collection. Uses Application Default Credentials — run
+ * `gcloud auth application-default login` first if running locally.
+ *
+ * Usage:
+ *   node scripts/seed-vendors.mjs                           # dry-run (prints docs)
+ *   node scripts/seed-vendors.mjs --project <project-id>    # writes to Firestore
+ */
 
-export const VENDOR_DATA: VendorInfo[] = [
+import { initializeApp, cert, applicationDefault } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
+const VENDORS = [
   {
     id: 'aws',
     name: 'Amazon Web Services',
@@ -120,3 +110,38 @@ export const VENDOR_DATA: VendorInfo[] = [
     notes: '',
   },
 ];
+
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const idx = args.indexOf('--project');
+  if (idx === -1 || !args[idx + 1]) return null;
+  return args[idx + 1];
+}
+
+async function main() {
+  const projectId = parseArgs();
+
+  if (!projectId) {
+    console.log('Dry-run mode (pass --project <id> to write to Firestore)\n');
+    for (const v of VENDORS) {
+      console.log(`  vendors/${v.id}`, JSON.stringify(v, null, 2));
+    }
+    return;
+  }
+
+  initializeApp({ credential: applicationDefault(), projectId });
+  const db = getFirestore();
+
+  const batch = db.batch();
+  for (const vendor of VENDORS) {
+    batch.set(db.collection('vendors').doc(vendor.id), vendor);
+  }
+  await batch.commit();
+
+  console.log(`Seeded ${VENDORS.length} vendors into project "${projectId}".`);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

@@ -3,8 +3,10 @@ import {
   Input,
 } from '@haderach/shared-ui'
 import { VendorFilters } from './VendorFilters'
+import type { VendorInfo } from './types'
 
 interface ControlsProps {
+  vendors: VendorInfo[];
   selectedCategories: string[];
   selectedVendors: string[];
   dateFrom: string;
@@ -18,6 +20,7 @@ interface ControlsProps {
 }
 
 export function Controls({
+  vendors,
   selectedCategories,
   selectedVendors,
   dateFrom,
@@ -32,6 +35,7 @@ export function Controls({
   return (
     <div className="flex flex-col gap-3 px-2">
       <VendorFilters
+        vendors={vendors}
         selectedCategories={selectedCategories}
         selectedVendors={selectedVendors}
         onCategoriesChange={onCategoriesChange}

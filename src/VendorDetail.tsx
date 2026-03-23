@@ -1,12 +1,12 @@
+import { Separator } from '@haderach/shared-ui';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  Separator,
-} from '@haderach/shared-ui';
-import type { VendorInfo, VendorStatus } from './vendor-data';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from './components/ui/dialog';
+import type { VendorInfo, VendorStatus } from './types';
 
 const statusLabels: Record<VendorStatus, string> = {
   active: 'Active',
@@ -76,19 +76,19 @@ export function VendorDetail({ vendor, open, onClose }: VendorDetailProps) {
   if (!vendor) return null;
 
   return (
-    <Sheet open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <SheetContent className="overflow-y-auto sm:max-w-md px-6">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             {vendor.name}
             <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[vendor.status]}`}>
               {statusLabels[vendor.status]}
             </span>
-          </SheetTitle>
-          <SheetDescription>{vendor.category}</SheetDescription>
-        </SheetHeader>
+          </DialogTitle>
+          <DialogDescription>{vendor.category}</DialogDescription>
+        </DialogHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="space-y-6">
           <section>
             <h3 className="text-sm font-semibold mb-2">Account & Billing</h3>
             <Separator className="mb-3" />
@@ -125,7 +125,7 @@ export function VendorDetail({ vendor, open, onClose }: VendorDetailProps) {
             </section>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
