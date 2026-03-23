@@ -33,3 +33,25 @@
   font-style: italic;
   padding: 0.5rem 0;
 }
+
+/* Chat markdown */
+.chat-markdown p {
+  margin: 0.25em 0;
+}
+.chat-markdown p:first-child {
+  margin-top: 0;
+}
+.chat-markdown p:last-child {
+  margin-bottom: 0;
+}
+.chat-markdown ul,
+.chat-markdown ol {
+  margin: 0.25em 0;
+  padding-left: 1.25em;
+}
+.chat-markdown li {
+  margin: 0.15em 0;
+}
+.chat-markdown strong {
+  font-weight: 600;
+}

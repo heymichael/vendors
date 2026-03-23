@@ -18,6 +18,8 @@ import { Controls } from './Controls';
 import { VendorFilters } from './VendorFilters';
 import { SpendDataView } from './SpendDataView';
 import { VendorList } from './VendorList';
+import { ChatPanel } from './ChatPanel';
+import { ChatToggle } from './ChatToggle';
 import { useAuthUser } from './auth/AuthUserContext';
 import { useVendors } from './useVendors';
 import type { SpendRow, SpendResponse, SpendErrorResponse } from './types';
@@ -35,7 +37,7 @@ function sixMonthsAgoISO(): string {
 }
 
 export function App() {
-  const { vendors, loading: vendorsLoading, error: vendorsError } = useVendors();
+  const { vendors, loading: vendorsLoading, error: vendorsError, refresh: refreshVendors } = useVendors();
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
@@ -46,14 +48,30 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [noData, setNoData] = useState<string | null>(null);
   const [view, setView] = useState<'spending' | 'vendors'>('vendors');
+  const [chatOpen, setChatOpen] = useState(false);
 
   const initialized = useRef(false);
+  const prevVendorIds = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!vendorsLoading && vendors.length > 0 && !initialized.current) {
+    if (vendorsLoading || vendors.length === 0) return;
+
+    const currentIds = new Set(vendors.map((v) => v.id));
+    const currentCategories = [...new Set(vendors.map((v) => v.category))].sort();
+
+    if (!initialized.current) {
       initialized.current = true;
-      setSelectedCategories([...new Set(vendors.map((v) => v.category))].sort());
-      setSelectedVendors(vendors.map((v) => v.id));
+      setSelectedCategories(currentCategories);
+      setSelectedVendors([...currentIds]);
+      prevVendorIds.current = currentIds;
+      return;
     }
+
+    const newIds = [...currentIds].filter((id) => !prevVendorIds.current.has(id));
+    if (newIds.length > 0) {
+      setSelectedVendors((prev) => [...prev, ...newIds]);
+      setSelectedCategories(currentCategories);
+    }
+    prevVendorIds.current = currentIds;
   }, [vendorsLoading, vendors]);
 
   const filteredVendors = useMemo(
@@ -184,27 +202,36 @@ export function App() {
         </Sidebar>
 
         <SidebarInset>
-          <header className="flex h-12 items-center gap-2 border-b px-4">
-            <SidebarTrigger />
-            <Separator orientation="vertical" className="h-4" />
+          <div className="flex h-full">
+            <div className="flex min-w-0 flex-1 flex-col">
+              <header className="flex h-12 items-center gap-2 border-b px-4">
+                <SidebarTrigger />
+                <Separator orientation="vertical" className="h-4" />
             <h1 className="text-lg font-semibold">
-              Vendor Spend Management
+              Vendor Management
             </h1>
-          </header>
+                <div className="ml-auto">
+                  <ChatToggle open={chatOpen} onToggle={() => setChatOpen((o) => !o)} />
+                </div>
+              </header>
 
-          <div className="display-panel">
-            {vendorsError && (
-              <div className="p-4 text-sm text-red-600 bg-red-50 rounded m-4">
-                Firestore error: {vendorsError}
+              <div className="display-panel">
+                {vendorsError && (
+                  <div className="p-4 text-sm text-red-600 bg-red-50 rounded m-4">
+                    Firestore error: {vendorsError}
+                  </div>
+                )}
+                {view === 'spending' && (
+                  <>
+                    {noData && <p className="no-data">{noData}</p>}
+                    <SpendDataView rows={rows} />
+                  </>
+                )}
+                {view === 'vendors' && <VendorList vendors={filteredVendors} />}
               </div>
-            )}
-            {view === 'spending' && (
-              <>
-                {noData && <p className="no-data">{noData}</p>}
-                <SpendDataView rows={rows} />
-              </>
-            )}
-            {view === 'vendors' && <VendorList vendors={filteredVendors} />}
+            </div>
+
+            <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} onVendorsChanged={refreshVendors} />
           </div>
         </SidebarInset>
       </SidebarProvider>

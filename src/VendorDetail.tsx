@@ -22,6 +22,7 @@ const statusColors: Record<VendorStatus, string> = {
 
 const paymentLabels: Record<string, string> = {
   'credit-card': 'Credit Card',
+  'credit_card': 'Credit Card',
   invoice: 'Invoice',
   ach: 'ACH',
   wire: 'Wire',
@@ -35,7 +36,7 @@ const cycleLabels: Record<string, string> = {
 
 function formatDate(iso?: string): string {
   if (!iso) return '—';
-  const d = new Date(iso + 'T00:00:00');
+  const d = new Date(iso.includes('T') ? iso : iso + 'T00:00:00');
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
@@ -115,6 +116,13 @@ export function VendorDetail({ vendor, open, onClose }: VendorDetailProps) {
             <DetailRow label="Website" value={vendor.website} href />
             <DetailRow label="Login URL" value={vendor.loginUrl} href />
             <DetailRow label="Data source" value={vendor.dataSource} />
+          </section>
+
+          <section>
+            <h3 className="text-sm font-semibold mb-2">Record</h3>
+            <Separator className="mb-3" />
+            <DetailRow label="Created" value={formatDate(vendor.created_at)} />
+            <DetailRow label="Last modified" value={formatDate(vendor.modified_at)} />
           </section>
 
           {vendor.notes && (
