@@ -2,7 +2,7 @@
 
 ## Overview
 
-The vendors app tracks monthly spend across software vendors (AWS, Cursor, GCS, etc.). It follows the same SPA + backend service pattern as the stocks app.
+The vendors app tracks monthly spend across software vendors (AWS, Cursor, GCS, etc.). It follows the same SPA + backend service pattern as the stocks app. Vendor metadata is stored in Firestore and streamed to the UI in real-time via `onSnapshot`.
 
 ## Repo Layout
 
@@ -26,7 +26,8 @@ vendors/
 │   └── architecture.md
 ├── scripts/
 │   ├── generate-manifest.mjs
-│   └── package-artifacts.sh
+│   ├── package-artifacts.sh
+│   └── seed-vendors.mjs          # One-time Firestore seed (firebase-admin)
 ├── service/                      # Cloud Run FastAPI service
 │   ├── app.py                    # /vendors/api/spend endpoint (boto3 Cost Explorer)
 │   ├── Dockerfile
@@ -37,21 +38,24 @@ vendors/
 │   │   ├── AuthGate.tsx
 │   │   ├── AuthUserContext.ts
 │   │   └── runtimeConfig.ts
+│   ├── components/
+│   │   └── ui/
+│   │       └── dialog.tsx        # Radix Dialog (center modal)
 │   ├── App.tsx                   # Root component (GlobalNav + Sidebar layout)
 │   ├── App.css                   # Shell layout and sidebar positioning
 │   ├── Controls.tsx              # Vendor + date filters (embedded in Sidebar)
 │   ├── SpendChart.tsx            # Recharts stacked BarChart
 │   ├── SpendDataView.tsx         # Tabbed container (Chart | Table toggle)
 │   ├── SpendTable.tsx            # Pivot table (vendors × months)
-│   ├── VendorDetail.tsx          # Vendor detail slide-over panel
+│   ├── VendorDetail.tsx          # Vendor detail dialog (center modal)
 │   ├── VendorFilters.tsx         # Category + vendor multi-select filters
 │   ├── VendorList.tsx            # Vendor metadata table
 │   ├── index.css                 # Theme tokens + sidebar tokens
 │   ├── main.tsx
 │   ├── spend-columns.tsx         # Dynamic spend column definitions
-│   ├── types.ts
+│   ├── types.ts                  # Vendor + spend types
+│   ├── useVendors.ts             # Real-time Firestore vendor subscription
 │   ├── vendor-columns.tsx        # Vendor table column definitions
-│   ├── vendor-data.ts            # Static vendor metadata
 │   └── vite-env.d.ts
 ├── .env.example
 ├── .gitignore
@@ -67,11 +71,38 @@ vendors/
 
 ## Data Flow
 
+### Vendor metadata (real-time)
+
+1. `useVendors` hook subscribes to the Firestore `vendors` collection via `onSnapshot`
+2. Vendor list, filters, and detail dialog are driven by live data
+3. In auth-bypass mode, the hook initializes Firebase and signs in anonymously
+
+### Spend data (on-demand)
+
 1. User selects vendors and date range in sidebar, clicks Fetch
 2. Frontend calls `GET /vendors/api/spend?vendors=aws&from=YYYY-MM-DD&to=YYYY-MM-DD`
 3. FastAPI backend calls AWS Cost Explorer (`ce.get_cost_and_usage`)
 4. Backend returns `{ data: [{ vendor, month, amount }] }`
 5. Frontend renders stacked bar chart and pivot table
+
+## Firestore Schema
+
+### `vendors/{vendorId}`
+
+Each document mirrors the `VendorInfo` interface from `types.ts`:
+
+| Field | Type | Required |
+|-------|------|----------|
+| `id` | string | yes |
+| `name` | string | yes |
+| `category` | string | yes |
+| `status` | `active` \| `inactive` \| `trial` | yes |
+| `billingCycle` | `monthly` \| `annual` \| `usage-based` | yes |
+| `paymentMethod` | `credit-card` \| `invoice` \| `ach` \| `wire` | yes |
+| `contractRenews` | string (ISO date) | no |
+| `website`, `loginUrl`, etc. | string | no |
+
+Firestore rules (in `haderach-platform/firestore.rules`): authenticated reads allowed, client writes denied. Admin writes via Admin SDK or Firebase Console.
 
 ## API Contract
 
@@ -111,9 +142,22 @@ Response:
 
 ## Local Development
 
-1. Copy `.env.example` to `.env` and fill in credentials (JSON format per vendor, e.g. `VENDOR_AWS_BILLING_CREDENTIALS`)
+1. Copy `.env.example` to `.env` and fill in credentials:
+   - `VITE_FIREBASE_*` vars (copy from `stocks/.env.local` or `haderach-home/.env.local`)
+   - `VENDOR_AWS_BILLING_CREDENTIALS` (JSON format for spend API)
+   - `VITE_AUTH_BYPASS=true` for dev without the full sign-in flow
 2. Start backend: `cd service && pip install -r requirements.txt && uvicorn app:app --port 5002`
 3. Start frontend: `npm run dev` (Vite proxies `/vendors/api` to `localhost:5002`)
+
+In auth-bypass mode, the `useVendors` hook signs in anonymously to satisfy Firestore rules. Anonymous auth must be enabled in the Firebase project.
+
+### Seeding vendor data
+
+```bash
+npm install --no-save firebase-admin
+node scripts/seed-vendors.mjs                        # dry-run
+node scripts/seed-vendors.mjs --project haderach-ai   # write to Firestore
+```
 
 ## Deployment
 
