@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   Button,
   DropdownMenu,
@@ -6,11 +7,10 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuSeparator,
 } from '@haderach/shared-ui'
-import { VENDOR_DATA } from './vendor-data'
-
-const ALL_CATEGORIES = [...new Set(VENDOR_DATA.map((v) => v.category))].sort();
+import type { VendorInfo } from './types';
 
 interface VendorFiltersProps {
+  vendors: VendorInfo[];
   selectedCategories: string[];
   selectedVendors: string[];
   onCategoriesChange: (categories: string[]) => void;
@@ -18,12 +18,18 @@ interface VendorFiltersProps {
 }
 
 export function VendorFilters({
+  vendors,
   selectedCategories,
   selectedVendors,
   onCategoriesChange,
   onVendorsChange,
 }: VendorFiltersProps) {
-  const filteredVendorOptions = VENDOR_DATA.filter(
+  const allCategories = useMemo(
+    () => [...new Set(vendors.map((v) => v.category))].sort(),
+    [vendors],
+  );
+
+  const filteredVendorOptions = vendors.filter(
     (v) => selectedCategories.length === 0 || selectedCategories.includes(v.category),
   );
 
@@ -33,7 +39,7 @@ export function VendorFilters({
       : [...selectedCategories, cat];
     onCategoriesChange(next);
 
-    const vendorsInNextCategories = VENDOR_DATA
+    const vendorsInNextCategories = vendors
       .filter((v) => next.length === 0 || next.includes(v.category))
       .map((v) => v.id);
     onVendorsChange(vendorsInNextCategories);
@@ -48,7 +54,7 @@ export function VendorFilters({
   };
 
   const categoryLabel =
-    selectedCategories.length === 0 || selectedCategories.length === ALL_CATEGORIES.length
+    selectedCategories.length === 0 || selectedCategories.length === allCategories.length
       ? 'All categories'
       : selectedCategories.length === 1
         ? selectedCategories[0]
@@ -60,7 +66,7 @@ export function VendorFilters({
       : selectedVendors.length === filteredVendorOptions.length
         ? 'All vendors'
         : selectedVendors.length === 1
-          ? VENDOR_DATA.find((v) => v.id === selectedVendors[0])?.name ?? selectedVendors[0]
+          ? vendors.find((v) => v.id === selectedVendors[0])?.name ?? selectedVendors[0]
           : `${selectedVendors.length} vendors selected`;
 
   return (
@@ -81,8 +87,8 @@ export function VendorFilters({
                 type="button"
                 className="text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => {
-                  onCategoriesChange([...ALL_CATEGORIES]);
-                  onVendorsChange(VENDOR_DATA.map((v) => v.id));
+                  onCategoriesChange([...allCategories]);
+                  onVendorsChange(vendors.map((v) => v.id));
                 }}
               >
                 Select all
@@ -100,7 +106,7 @@ export function VendorFilters({
               </button>
             </div>
             <DropdownMenuSeparator />
-            {ALL_CATEGORIES.map((cat) => (
+            {allCategories.map((cat) => (
               <DropdownMenuCheckboxItem
                 key={cat}
                 checked={selectedCategories.includes(cat)}

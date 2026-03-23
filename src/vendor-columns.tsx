@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@haderach/shared-ui';
 import { Button } from '@haderach/shared-ui';
 import { ArrowUpDown } from 'lucide-react';
-import type { VendorInfo, VendorStatus } from './vendor-data';
+import type { VendorInfo, VendorStatus } from './types';
 
 const statusLabels: Record<VendorStatus, string> = {
   active: 'Active',
@@ -14,18 +14,6 @@ const statusColors: Record<VendorStatus, string> = {
   inactive: 'bg-gray-100 text-gray-600',
   trial: 'bg-amber-100 text-amber-800',
 };
-
-function formatDate(iso?: string): string {
-  if (!iso) return '—';
-  const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function isRenewalSoon(iso?: string): boolean {
-  if (!iso) return false;
-  const diff = new Date(iso).getTime() - Date.now();
-  return diff > 0 && diff < 60 * 86_400_000;
-}
 
 const paymentLabels: Record<string, string> = {
   'credit-card': 'Credit Card',
@@ -100,29 +88,6 @@ export function buildVendorColumns(onVendorClick: (vendor: VendorInfo) => void):
       accessorKey: 'paymentMethod',
       header: () => <span className="font-bold text-sm">Payment Method</span>,
       cell: ({ row }) => paymentLabels[row.getValue('paymentMethod') as string] ?? row.getValue('paymentMethod'),
-    },
-    {
-      accessorKey: 'contractRenews',
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="font-bold"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Contract Renews
-          <ArrowUpDown />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const val = row.getValue('contractRenews') as string | undefined;
-        const soon = isRenewalSoon(val);
-        return (
-          <span className={soon ? 'font-medium text-amber-700' : ''}>
-            {formatDate(val)}
-          </span>
-        );
-      },
     },
   ];
 }

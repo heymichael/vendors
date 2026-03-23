@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   GlobalNav,
   SidebarProvider,
@@ -19,11 +19,9 @@ import { VendorFilters } from './VendorFilters';
 import { SpendDataView } from './SpendDataView';
 import { VendorList } from './VendorList';
 import { useAuthUser } from './auth/AuthUserContext';
-import { VENDOR_DATA } from './vendor-data';
+import { useVendors } from './useVendors';
 import type { SpendRow, SpendResponse, SpendErrorResponse } from './types';
 import './App.css';
-
-const ALL_CATEGORIES = [...new Set(VENDOR_DATA.map((v) => v.category))].sort();
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
@@ -37,10 +35,10 @@ function sixMonthsAgoISO(): string {
 }
 
 export function App() {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([...ALL_CATEGORIES]);
-  const [selectedVendors, setSelectedVendors] = useState(
-    VENDOR_DATA.map((v) => v.id),
-  );
+  const { vendors, loading: vendorsLoading, error: vendorsError } = useVendors();
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState(sixMonthsAgoISO);
   const [dateTo, setDateTo] = useState(todayISO);
   const [rows, setRows] = useState<SpendRow[]>([]);
@@ -49,9 +47,18 @@ export function App() {
   const [noData, setNoData] = useState<string | null>(null);
   const [view, setView] = useState<'spending' | 'vendors'>('vendors');
 
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (!vendorsLoading && vendors.length > 0 && !initialized.current) {
+      initialized.current = true;
+      setSelectedCategories([...new Set(vendors.map((v) => v.category))].sort());
+      setSelectedVendors(vendors.map((v) => v.id));
+    }
+  }, [vendorsLoading, vendors]);
+
   const filteredVendors = useMemo(
-    () => VENDOR_DATA.filter((v) => selectedVendors.includes(v.id)),
-    [selectedVendors],
+    () => vendors.filter((v) => selectedVendors.includes(v.id)),
+    [vendors, selectedVendors],
   );
 
   const handleFetch = useCallback(async () => {
@@ -145,6 +152,7 @@ export function App() {
               <SidebarGroupContent>
                 {view === 'spending' ? (
                   <Controls
+                    vendors={vendors}
                     selectedCategories={selectedCategories}
                     selectedVendors={selectedVendors}
                     dateFrom={dateFrom}
@@ -159,6 +167,7 @@ export function App() {
                 ) : (
                   <div className="flex flex-col gap-3 px-2">
                     <VendorFilters
+                      vendors={vendors}
                       selectedCategories={selectedCategories}
                       selectedVendors={selectedVendors}
                       onCategoriesChange={setSelectedCategories}
@@ -184,6 +193,11 @@ export function App() {
           </header>
 
           <div className="display-panel">
+            {vendorsError && (
+              <div className="p-4 text-sm text-red-600 bg-red-50 rounded m-4">
+                Firestore error: {vendorsError}
+              </div>
+            )}
             {view === 'spending' && (
               <>
                 {noData && <p className="no-data">{noData}</p>}

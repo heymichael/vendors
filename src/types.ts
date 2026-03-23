@@ -1,3 +1,28 @@
+export type VendorStatus = 'active' | 'inactive' | 'trial';
+export type BillingCycle = 'monthly' | 'annual' | 'usage-based';
+export type PaymentMethod = 'credit-card' | 'invoice' | 'ach' | 'wire';
+
+export interface VendorInfo {
+  id: string;
+  name: string;
+  category: string;
+  status: VendorStatus;
+  billingCycle: BillingCycle;
+  paymentMethod: PaymentMethod;
+  contractRenews?: string;
+  accountId?: string;
+  billingContact?: string;
+  notes?: string;
+  internalContact?: string;
+  dataSource?: string;
+  vendorContact?: string;
+  supportPhone?: string;
+  supportEmail?: string;
+  billingAddress?: string;
+  website?: string;
+  loginUrl?: string;
+}
+
 export interface SpendRow {
   vendor: string;
   month: string;
