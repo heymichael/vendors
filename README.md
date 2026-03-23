@@ -22,6 +22,74 @@ uvicorn app:app --port 5002
 npm run dev
 ```
 
+## Repo layout
+
+```text
+vendors/
+├── .cursor/
+│   ├── rules/
+│   │   ├── architecture-pointer.mdc
+│   │   ├── branch-safety-reminder.mdc
+│   │   ├── pr-conventions.mdc
+│   │   ├── repo-hygiene.mdc
+│   │   └── todo-conventions.mdc
+│   └── skills/
+│       └── brand-guidelines/
+│           └── SKILL.md
+├── .github/
+│   ├── pull_request_template.md
+│   └── workflows/
+│       └── publish-artifact.yml
+├── docs/
+│   └── architecture.md
+├── scripts/
+│   ├── generate-manifest.mjs
+│   ├── package-artifacts.sh
+│   └── seed-vendors.mjs
+├── service/
+│   ├── app.py
+│   ├── Dockerfile
+│   └── requirements.txt
+├── src/
+│   ├── auth/
+│   │   ├── accessPolicy.ts
+│   │   ├── AuthGate.tsx
+│   │   ├── AuthUserContext.ts
+│   │   └── runtimeConfig.ts
+│   ├── components/
+│   │   └── ui/
+│   │       └── dialog.tsx
+│   ├── App.tsx
+│   ├── App.css
+│   ├── ChatPanel.tsx
+│   ├── ChatToggle.tsx
+│   ├── Controls.tsx
+│   ├── SpendChart.tsx
+│   ├── SpendDataView.tsx
+│   ├── SpendTable.tsx
+│   ├── VendorDetail.tsx
+│   ├── VendorFilters.tsx
+│   ├── VendorList.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   ├── spend-columns.tsx
+│   ├── types.ts
+│   ├── useVendors.ts
+│   ├── vendor-columns.tsx
+│   └── vite-env.d.ts
+├── .env.example
+├── .gitignore
+├── firebase.json
+├── index.html
+├── package-lock.json
+├── package.json
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+├── vite.config.ts
+└── README.md
+```
+
 ## Architecture
 
 See [docs/architecture.md](docs/architecture.md) for full details.

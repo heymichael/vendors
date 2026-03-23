@@ -43,6 +43,8 @@ vendors/
 │   │       └── dialog.tsx        # Radix Dialog (center modal)
 │   ├── App.tsx                   # Root component (GlobalNav + Sidebar layout)
 │   ├── App.css                   # Shell layout and sidebar positioning
+│   ├── ChatPanel.tsx             # Agent chat panel (calls /agent/api/chat)
+│   ├── ChatToggle.tsx            # Floating button to open/close chat
 │   ├── Controls.tsx              # Vendor + date filters (embedded in Sidebar)
 │   ├── SpendChart.tsx            # Recharts stacked BarChart
 │   ├── SpendDataView.tsx         # Tabbed container (Chart | Table toggle)
@@ -59,8 +61,9 @@ vendors/
 │   └── vite-env.d.ts
 ├── .env.example
 ├── .gitignore
-├── firebase.json                 # Local hosting emulator config
+├── firebase.json                 # Hosting config (headers, rewrites, emulator)
 ├── index.html
+├── package-lock.json
 ├── package.json
 ├── README.md
 ├── tsconfig.app.json
@@ -104,7 +107,17 @@ Each document mirrors the `VendorInfo` interface from `types.ts`:
 
 Firestore rules (in `haderach-platform/firestore.rules`): authenticated reads allowed, client writes denied. Admin writes via Admin SDK or Firebase Console.
 
+## Chat UI
+
+The vendors app includes an embedded chat panel (`ChatPanel.tsx`) that communicates with the shared agent service at `/agent/api/chat`. The panel is toggled via a floating button (`ChatToggle.tsx`). The agent can add, update, and query vendor records in Firestore via OpenAI tool-calling.
+
+In local development, Vite proxies `/agent/api` to `localhost:8080` (the agent service).
+
 ## API Contract
+
+### `GET /vendors/api/health`
+
+Returns `{"status": "ok"}`.
 
 ### `GET /vendors/api/spend`
 
@@ -147,7 +160,7 @@ Response:
    - `VENDOR_AWS_BILLING_CREDENTIALS` (JSON format for spend API)
    - `VITE_AUTH_BYPASS=true` for dev without the full sign-in flow
 2. Start backend: `cd service && pip install -r requirements.txt && uvicorn app:app --port 5002`
-3. Start frontend: `npm run dev` (Vite proxies `/vendors/api` to `localhost:5002`)
+3. Start frontend: `npm run dev` (Vite proxies `/vendors/api` to `localhost:5002` and `/agent/api` to `localhost:8080`)
 
 In auth-bypass mode, the `useVendors` hook signs in anonymously to satisfy Firestore rules. Anonymous auth must be enabled in the Firebase project.
 
