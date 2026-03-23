@@ -1,5 +1,4 @@
 import { MessageSquare } from 'lucide-react';
-import { Button } from '@haderach/shared-ui';
 
 interface ChatToggleProps {
   open: boolean;
