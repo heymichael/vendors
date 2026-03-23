@@ -17,6 +17,7 @@ const statusColors: Record<VendorStatus, string> = {
 
 const paymentLabels: Record<string, string> = {
   'credit-card': 'Credit Card',
+  'credit_card': 'Credit Card',
   invoice: 'Invoice',
   ach: 'ACH',
   wire: 'Wire',

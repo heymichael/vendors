@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously } from 'firebase/auth';
-import { collection, getFirestore, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, getFirestore, onSnapshot } from 'firebase/firestore';
 import type { VendorInfo } from './types';
 
 function getOrInitFirebaseApp() {
@@ -32,6 +32,7 @@ export function useVendors() {
   const [vendors, setVendors] = useState<VendorInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const dbRef = useRef<ReturnType<typeof getFirestore> | null>(null);
 
   useEffect(() => {
     const app = getOrInitFirebaseApp();
@@ -46,6 +47,7 @@ export function useVendors() {
     ensureAuth(app)
       .then(() => {
         const db = getFirestore(app);
+        dbRef.current = db;
         unsubscribe = onSnapshot(
           collection(db, 'vendors'),
           (snapshot) => {
@@ -66,5 +68,12 @@ export function useVendors() {
     return () => unsubscribe?.();
   }, []);
 
-  return { vendors, loading, error };
+  const refresh = useCallback(async () => {
+    const db = dbRef.current;
+    if (!db) return;
+    const snapshot = await getDocs(collection(db, 'vendors'));
+    setVendors(snapshot.docs.map((doc) => doc.data() as VendorInfo));
+  }, []);
+
+  return { vendors, loading, error, refresh };
 }
