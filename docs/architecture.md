@@ -113,6 +113,10 @@ Firestore rules (in `haderach-platform/firestore.rules`): authenticated reads al
 
 The vendors app includes an embedded chat panel (`ChatPanel.tsx`) that communicates with the shared agent service at `/agent/api/chat`. The panel is toggled via a floating button (`ChatToggle.tsx`). The agent can add, modify, delete, and query vendor records in Firestore via OpenAI tool-calling. The `modify_vendor` tool opens the vendor detail modal in edit mode; the user edits fields and saves via `PATCH /agent/api/vendors/:id`.
 
+### Spend queries via chat
+
+The agent can answer live spend questions (e.g. "What's my AWS spend this month?") using the `execute_python` tool. Instead of per-vendor fetcher code, the LLM generates Python at runtime to call billing APIs (boto3 Cost Explorer, etc.) in a sandboxed executor (`agent/service/sandbox.py`). Credentials are available via environment variables — never surfaced in prompts or outputs. The sandbox restricts imports to an allowlist (`boto3`, `json`, `os`, `datetime`, etc.) and enforces a 30-second timeout.
+
 In local development, Vite proxies `/agent/api` to `localhost:8080` (the agent service).
 
 ## API Contract
