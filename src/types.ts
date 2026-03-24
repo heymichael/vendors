@@ -21,6 +21,8 @@ export interface VendorInfo {
   billingAddress?: string;
   website?: string;
   loginUrl?: string;
+  billingAdmin?: string;
+  michaelAdded?: boolean;
   created_at?: string;
   modified_at?: string;
 }

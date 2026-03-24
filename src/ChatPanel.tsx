@@ -21,9 +21,9 @@ interface ChatResponse {
   pending_action?: PendingAction | null;
 }
 
-const WRITE_TOOLS = new Set(['add_vendor', 'delete_vendor']);
+const WRITE_TOOLS = new Set(['add_vendor', 'delete_vendor', 'modify_vendor']);
 
-export function ChatPanel({ open, onClose, onVendorsChanged }: { open: boolean; onClose: () => void; onVendorsChanged?: () => void }) {
+export function ChatPanel({ open, onClose, onVendorsChanged, onEditVendor }: { open: boolean; onClose: () => void; onVendorsChanged?: () => void; onEditVendor?: (vendorId: string) => void }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -74,6 +74,8 @@ export function ChatPanel({ open, onClose, onVendorsChanged }: { open: boolean; 
 
       if (data.pending_action?.type === 'confirm_delete') {
         setPendingDelete(data.pending_action);
+      } else if (data.pending_action?.type === 'open_edit') {
+        onEditVendor?.(data.pending_action.vendor_id);
       } else if (data.tool_calls_executed.some((t) => WRITE_TOOLS.has(t))) {
         onVendorsChanged?.();
       }
@@ -151,7 +153,7 @@ export function ChatPanel({ open, onClose, onVendorsChanged }: { open: boolean; 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
           <p className="text-sm text-muted-foreground italic">
-            Ask me to add, delete, or look up a vendor.
+            Ask me to add, delete, modify, or look up a vendor.
           </p>
         )}
         {messages.filter((m) => !m.hidden).map((m, i) => (
