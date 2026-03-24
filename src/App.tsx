@@ -49,6 +49,7 @@ export function App() {
   const [noData, setNoData] = useState<string | null>(null);
   const [view, setView] = useState<'spending' | 'vendors'>('vendors');
   const [chatOpen, setChatOpen] = useState(false);
+  const [editVendorId, setEditVendorId] = useState<string | null>(null);
 
   const initialized = useRef(false);
   const prevVendorIds = useRef<Set<string>>(new Set());
@@ -227,11 +228,22 @@ export function App() {
                     <SpendDataView rows={rows} />
                   </>
                 )}
-                {view === 'vendors' && <VendorList vendors={filteredVendors} />}
+                {view === 'vendors' && (
+                  <VendorList
+                    vendors={filteredVendors}
+                    editVendorId={editVendorId}
+                    onEditDone={() => { setEditVendorId(null); refreshVendors(); }}
+                  />
+                )}
               </div>
             </div>
 
-            <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} onVendorsChanged={refreshVendors} />
+            <ChatPanel
+              open={chatOpen}
+              onClose={() => setChatOpen(false)}
+              onVendorsChanged={refreshVendors}
+              onEditVendor={(id) => { setView('vendors'); setEditVendorId(id); }}
+            />
           </div>
         </SidebarInset>
       </SidebarProvider>

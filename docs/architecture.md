@@ -49,7 +49,7 @@ vendors/
 │   ├── SpendChart.tsx            # Recharts stacked BarChart
 │   ├── SpendDataView.tsx         # Tabbed container (Chart | Table toggle)
 │   ├── SpendTable.tsx            # Pivot table (vendors × months)
-│   ├── VendorDetail.tsx          # Vendor detail dialog (center modal)
+│   ├── VendorDetail.tsx          # Vendor detail dialog (view + edit modal)
 │   ├── VendorFilters.tsx         # Category + vendor multi-select filters
 │   ├── VendorList.tsx            # Vendor metadata table
 │   ├── index.css                 # Theme tokens + sidebar tokens
@@ -103,13 +103,15 @@ Each document mirrors the `VendorInfo` interface from `types.ts`:
 | `billingCycle` | `monthly` \| `annual` \| `usage-based` | yes |
 | `paymentMethod` | `credit-card` \| `invoice` \| `ach` \| `wire` | yes |
 | `contractRenews` | string (ISO date) | no |
+| `billingAdmin` | string | no |
+| `michaelAdded` | boolean | no |
 | `website`, `loginUrl`, etc. | string | no |
 
 Firestore rules (in `haderach-platform/firestore.rules`): authenticated reads allowed, client writes denied. Admin writes via Admin SDK or Firebase Console.
 
 ## Chat UI
 
-The vendors app includes an embedded chat panel (`ChatPanel.tsx`) that communicates with the shared agent service at `/agent/api/chat`. The panel is toggled via a floating button (`ChatToggle.tsx`). The agent can add, update, and query vendor records in Firestore via OpenAI tool-calling.
+The vendors app includes an embedded chat panel (`ChatPanel.tsx`) that communicates with the shared agent service at `/agent/api/chat`. The panel is toggled via a floating button (`ChatToggle.tsx`). The agent can add, modify, delete, and query vendor records in Firestore via OpenAI tool-calling. The `modify_vendor` tool opens the vendor detail modal in edit mode; the user edits fields and saves via `PATCH /agent/api/vendors/:id`.
 
 In local development, Vite proxies `/agent/api` to `localhost:8080` (the agent service).
 
@@ -139,6 +141,14 @@ Response:
   ]
 }
 ```
+
+### `PATCH /agent/api/vendors/:vendor_id`
+
+Partial-update a vendor document. Body is a JSON object of fields to update. Returns the full vendor document after update.
+
+### `DELETE /agent/api/vendors/:vendor_id`
+
+Delete a vendor document (called after user confirms deletion in the UI).
 
 ## Routing
 
