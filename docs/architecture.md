@@ -34,7 +34,7 @@ vendors/
 │   └── requirements.txt
 ├── src/                          # React + Vite SPA (TypeScript)
 │   ├── auth/                     # Firebase Auth gate (platform-delegated sign-in)
-│   │   ├── accessPolicy.ts
+│   │   ├── accessPolicy.ts       # RBAC (imports catalog from @haderach/shared-ui)
 │   │   ├── AuthGate.tsx
 │   │   ├── AuthUserContext.ts
 │   │   └── runtimeConfig.ts

@@ -9,7 +9,7 @@ import {
   signOut,
   type User,
 } from 'firebase/auth'
-import { fetchUserDoc, buildDisplayName, hasAppAccess, getAccessibleApps, APP_CATALOG } from './accessPolicy'
+import { fetchUserDoc, buildDisplayName, hasAppAccess, getAccessibleApps, APP_CATALOG, APP_ID } from './accessPolicy'
 import { getAuthRuntimeConfig } from './runtimeConfig'
 import { AuthUserContext } from './AuthUserContext'
 import { Button } from '@haderach/shared-ui'
@@ -74,7 +74,7 @@ export function AuthGate({ children }: AuthGateProps) {
         const fetchedRoles = userDoc.roles
         setRoles(fetchedRoles)
         setDisplayName(buildDisplayName(userDoc.firstName, userDoc.lastName))
-        if (hasAppAccess(fetchedRoles)) {
+        if (hasAppAccess(fetchedRoles, APP_ID)) {
           setStatus('authorized')
         } else {
           setStatus('unauthorized')

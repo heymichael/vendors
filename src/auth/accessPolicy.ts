@@ -1,13 +1,10 @@
 import { doc, getDoc, getFirestore } from 'firebase/firestore'
 import type { FirebaseApp } from 'firebase/app'
 
-const APP_ID = 'vendors'
+export { APP_CATALOG, APP_GRANTING_ROLES, hasAppAccess, getAccessibleApps } from '@haderach/shared-ui'
+export type { NavApp as AccessibleApp } from '@haderach/shared-ui'
 
-const APP_GRANTING_ROLES: Record<string, string[]> = {
-  card: ['admin', 'member', 'card_member'],
-  stocks: ['admin', 'member', 'stocks_member'],
-  vendors: ['admin', 'member', 'vendors_member'],
-}
+export const APP_ID = 'vendors'
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
@@ -39,25 +36,4 @@ export async function fetchUserDoc(app: FirebaseApp, email: string): Promise<Use
 export function buildDisplayName(firstName: string, lastName: string): string | undefined {
   const full = [firstName, lastName].filter(Boolean).join(' ')
   return full || undefined
-}
-
-export function hasAppAccess(userRoles: string[], appId: string = APP_ID): boolean {
-  const grantingRoles = APP_GRANTING_ROLES[appId] ?? []
-  return userRoles.some((role) => grantingRoles.includes(role))
-}
-
-export interface AccessibleApp {
-  id: string
-  label: string
-  path: string
-}
-
-export const APP_CATALOG: AccessibleApp[] = [
-  { id: 'card', label: 'Card', path: '/card/' },
-  { id: 'stocks', label: 'Commodities', path: '/stocks/' },
-  { id: 'vendors', label: 'Vendors', path: '/vendors/' },
-]
-
-export function getAccessibleApps(userRoles: string[]): AccessibleApp[] {
-  return APP_CATALOG.filter((app) => hasAppAccess(userRoles, app.id))
 }
