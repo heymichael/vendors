@@ -51,7 +51,7 @@ export function useVendors() {
         unsubscribe = onSnapshot(
           collection(db, 'vendors'),
           (snapshot) => {
-            setVendors(snapshot.docs.map((doc) => doc.data() as VendorInfo));
+            setVendors(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }) as VendorInfo));
             setLoading(false);
           },
           (err) => {
@@ -72,7 +72,7 @@ export function useVendors() {
     const db = dbRef.current;
     if (!db) return;
     const snapshot = await getDocs(collection(db, 'vendors'));
-    setVendors(snapshot.docs.map((doc) => doc.data() as VendorInfo));
+    setVendors(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }) as VendorInfo));
   }, []);
 
   return { vendors, loading, error, refresh };

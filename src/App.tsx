@@ -39,7 +39,6 @@ function sixMonthsAgoISO(): string {
 export function App() {
   const { vendors, loading: vendorsLoading, error: vendorsError, refresh: refreshVendors } = useVendors();
 
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState(sixMonthsAgoISO);
   const [dateTo, setDateTo] = useState(todayISO);
@@ -57,11 +56,9 @@ export function App() {
     if (vendorsLoading || vendors.length === 0) return;
 
     const currentIds = new Set(vendors.map((v) => v.id));
-    const currentCategories = [...new Set(vendors.map((v) => v.category))].sort();
 
     if (!initialized.current) {
       initialized.current = true;
-      setSelectedCategories(currentCategories);
       setSelectedVendors([...currentIds]);
       prevVendorIds.current = currentIds;
       return;
@@ -70,7 +67,6 @@ export function App() {
     const newIds = [...currentIds].filter((id) => !prevVendorIds.current.has(id));
     if (newIds.length > 0) {
       setSelectedVendors((prev) => [...prev, ...newIds]);
-      setSelectedCategories(currentCategories);
     }
     prevVendorIds.current = currentIds;
   }, [vendorsLoading, vendors]);
@@ -172,12 +168,10 @@ export function App() {
                 {view === 'spending' ? (
                   <Controls
                     vendors={vendors}
-                    selectedCategories={selectedCategories}
                     selectedVendors={selectedVendors}
                     dateFrom={dateFrom}
                     dateTo={dateTo}
                     loading={loading}
-                    onCategoriesChange={setSelectedCategories}
                     onVendorsChange={setSelectedVendors}
                     onDateFromChange={setDateFrom}
                     onDateToChange={setDateTo}
@@ -187,9 +181,7 @@ export function App() {
                   <div className="flex flex-col gap-3 px-2">
                     <VendorFilters
                       vendors={vendors}
-                      selectedCategories={selectedCategories}
                       selectedVendors={selectedVendors}
-                      onCategoriesChange={setSelectedCategories}
                       onVendorsChange={setSelectedVendors}
                     />
                   </div>

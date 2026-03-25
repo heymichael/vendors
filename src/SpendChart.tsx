@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import type { SpendRow } from './types';
 
 const CHART_HEIGHT = 500;
@@ -15,8 +15,8 @@ const VENDOR_COLORS = [
 const currencyFmt = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
-  maximumFractionDigits: 2,
-  minimumFractionDigits: 2,
+  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
 });
 
 interface SpendChartProps {
@@ -112,7 +112,6 @@ export function SpendChart({ rows }: SpendChartProps) {
               if (!active || !payload?.length) return null;
               return (
                 <div className="rounded-lg border border-border bg-background px-3 py-2 text-sm shadow-lg">
-                  <p className="font-medium">{formatMonth(label as string)}</p>
                   {payload.map((entry) => (
                     <p key={entry.name} style={{ color: entry.color }} className="flex justify-between gap-4">
                       <span>{entry.name}</span>
@@ -123,7 +122,6 @@ export function SpendChart({ rows }: SpendChartProps) {
               );
             }}
           />
-          <Legend />
           {vendors.map((vendor, i) => (
             <Bar
               key={vendor}
