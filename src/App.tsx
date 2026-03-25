@@ -204,10 +204,10 @@ export function App() {
                   </div>
                 )}
                 {view === 'spending' && (
-                  <>
+                  <div className="flex-1 min-h-0 overflow-y-auto">
                     {noData && <p className="no-data">{noData}</p>}
                     <SpendDataView rows={rows} />
-                  </>
+                  </div>
                 )}
                 {view === 'vendors' && (
                   <VendorList
