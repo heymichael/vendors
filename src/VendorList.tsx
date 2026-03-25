@@ -45,7 +45,7 @@ export function VendorList({ vendors, editVendorId, onEditDone }: VendorListProp
 
   return (
     <>
-      <DataTable columns={columns} data={vendors} csvFilename="vendors.csv" />
+      <DataTable columns={columns} data={vendors} csvFilename="vendors.csv" pinFirstColumn />
       <VendorDetail
         vendor={selectedVendor}
         open={selectedVendor !== null}
