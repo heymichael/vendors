@@ -108,7 +108,7 @@ export function SpendChart({ rows }: SpendChartProps) {
             tickFormatter={(v: number) => currencyFmt.format(v)}
           />
           <Tooltip
-            content={({ active, payload, label }) => {
+            content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
               return (
                 <div className="rounded-lg border border-border bg-background px-3 py-2 text-sm shadow-lg">

@@ -22,7 +22,8 @@ import { ChatPanel } from './ChatPanel';
 import { ChatToggle } from './ChatToggle';
 import { useAuthUser } from './auth/AuthUserContext';
 import { useVendors } from './useVendors';
-import type { SpendRow, SpendResponse, SpendErrorResponse } from './types';
+import { fetchVendorSpend } from './fetchVendorSpend';
+import type { SpendRow } from './types';
 import './App.css';
 
 function todayISO(): string {
@@ -95,35 +96,21 @@ export function App() {
     setRows([]);
     setLoading(true);
 
-    const params = new URLSearchParams({
-      vendors: selectedVendors.join(','),
-      from: dateFrom,
-      to: dateTo,
-    });
-
     try {
-      const resp = await fetch(`/vendors/api/spend?${params}`);
-      const body: SpendResponse | SpendErrorResponse = await resp.json();
+      const data = await fetchVendorSpend(selectedVendors, vendors, dateFrom, dateTo);
 
-      if (!resp.ok) {
-        const err = body as SpendErrorResponse;
-        setError(`Error ${resp.status}: ${err.error} — ${err.details}`);
-        return;
-      }
-
-      const data = body as SpendResponse;
-      if (!data.data || data.data.length === 0) {
+      if (data.length === 0) {
         setNoData('No spend data found for the selected vendors in that date range.');
         return;
       }
 
-      setRows(data.data);
+      setRows(data);
     } catch (err) {
-      setError(`Network error: ${err instanceof Error ? err.message : err}`);
+      setError(`Error fetching spend: ${err instanceof Error ? err.message : err}`);
     } finally {
       setLoading(false);
     }
-  }, [selectedVendors, dateFrom, dateTo]);
+  }, [selectedVendors, vendors, dateFrom, dateTo]);
 
   const authUser = useAuthUser();
 
@@ -163,7 +150,9 @@ export function App() {
               </SidebarMenu>
             </SidebarGroup>
 
-            <SidebarGroup>
+            <Separator className="mx-2" />
+
+            <SidebarGroup className="pt-2">
               <SidebarGroupContent>
                 {view === 'spending' ? (
                   <Controls

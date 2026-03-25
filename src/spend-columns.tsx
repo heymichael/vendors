@@ -3,8 +3,8 @@ import type { ColumnDef } from '@haderach/shared-ui';
 const currencyFmt = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
-  maximumFractionDigits: 2,
-  minimumFractionDigits: 2,
+  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
 });
 
 function formatMonthHeader(month: string): string {
