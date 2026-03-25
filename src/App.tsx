@@ -183,8 +183,8 @@ export function App() {
           <SidebarRail />
         </Sidebar>
 
-        <SidebarInset>
-          <div className="flex h-full">
+        <SidebarInset className="overflow-hidden">
+          <div className="flex h-full min-w-0">
             <div className="flex min-w-0 flex-1 flex-col">
               <header className="flex h-12 items-center gap-2 border-b px-4">
                 <SidebarTrigger />
