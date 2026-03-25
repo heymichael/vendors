@@ -1,49 +1,27 @@
 import type { ColumnDef } from '@haderach/shared-ui';
 import { Button } from '@haderach/shared-ui';
 import { ArrowUpDown } from 'lucide-react';
-import type { VendorInfo, VendorStatus } from './types';
+import type { VendorInfo } from './types';
 
-const statusLabels: Record<VendorStatus, string> = {
-  active: 'Active',
-  inactive: 'Inactive',
-  trial: 'Trial',
-};
-
-const statusColors: Record<VendorStatus, string> = {
-  active: 'bg-emerald-100 text-emerald-800',
-  inactive: 'bg-gray-100 text-gray-600',
-  trial: 'bg-amber-100 text-amber-800',
-};
-
-const paymentLabels: Record<string, string> = {
-  'credit-card': 'Credit Card',
-  'credit_card': 'Credit Card',
-  invoice: 'Invoice',
-  ach: 'ACH',
-  wire: 'Wire',
-};
-
-const cycleLabels: Record<string, string> = {
-  monthly: 'Monthly',
-  annual: 'Annual',
-  'usage-based': 'Usage-based',
-};
+function SortableHeader({ column, label }: { column: { toggleSorting: (desc: boolean) => void; getIsSorted: () => false | 'asc' | 'desc' }; label: string }) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="font-bold"
+      onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+    >
+      {label}
+      <ArrowUpDown />
+    </Button>
+  );
+}
 
 export function buildVendorColumns(onVendorClick: (vendor: VendorInfo) => void): ColumnDef<VendorInfo>[] {
   return [
     {
       accessorKey: 'name',
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="font-bold"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Vendor
-          <ArrowUpDown />
-        </Button>
-      ),
+      header: ({ column }) => <SortableHeader column={column} label="Vendor" />,
       cell: ({ row }) => (
         <button
           type="button"
@@ -55,40 +33,31 @@ export function buildVendorColumns(onVendorClick: (vendor: VendorInfo) => void):
       ),
     },
     {
-      accessorKey: 'category',
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="font-bold"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Category
-          <ArrowUpDown />
-        </Button>
-      ),
+      accessorKey: 'accountType',
+      header: ({ column }) => <SortableHeader column={column} label="Account Type" />,
+      cell: ({ row }) => row.getValue('accountType') ?? '—',
     },
     {
-      accessorKey: 'status',
-      header: () => <span className="font-bold text-sm">Status</span>,
+      accessorKey: 'department',
+      header: ({ column }) => <SortableHeader column={column} label="Department" />,
+      cell: ({ row }) => row.getValue('department') ?? '—',
+    },
+    {
+      accessorKey: 'owner',
+      header: ({ column }) => <SortableHeader column={column} label="Owner" />,
+      cell: ({ row }) => row.getValue('owner') ?? '—',
+    },
+    {
+      accessorKey: 'hide',
+      header: () => <span className="font-bold text-sm">Hidden</span>,
       cell: ({ row }) => {
-        const status = row.getValue('status') as VendorStatus;
-        return (
-          <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[status]}`}>
-            {statusLabels[status]}
-          </span>
+        const hidden = row.getValue('hide') as boolean | undefined;
+        return hidden ? (
+          <span className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Yes</span>
+        ) : (
+          <span className="text-xs text-muted-foreground">No</span>
         );
       },
-    },
-    {
-      accessorKey: 'billingCycle',
-      header: () => <span className="font-bold text-sm">Billing Cycle</span>,
-      cell: ({ row }) => cycleLabels[row.getValue('billingCycle') as string] ?? row.getValue('billingCycle'),
-    },
-    {
-      accessorKey: 'paymentMethod',
-      header: () => <span className="font-bold text-sm">Payment Method</span>,
-      cell: ({ row }) => paymentLabels[row.getValue('paymentMethod') as string] ?? row.getValue('paymentMethod'),
     },
   ];
 }

@@ -17,35 +17,17 @@ import {
   DialogDescription,
 } from './components/ui/dialog';
 import { Loader2, Pencil } from 'lucide-react';
-import type { VendorInfo, VendorStatus, BillingCycle, PaymentMethod } from './types';
+import type { VendorInfo } from './types';
 
-const statusLabels: Record<VendorStatus, string> = {
-  active: 'Active',
-  inactive: 'Inactive',
-  trial: 'Trial',
-};
+const BILLING_FREQUENCY_OPTIONS = [
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'annual', label: 'Annual' },
+  { value: 'quarterly', label: 'Quarterly' },
+  { value: 'usage-based', label: 'Usage-based' },
+  { value: 'one-time', label: 'One-time' },
+];
 
-const statusColors: Record<VendorStatus, string> = {
-  active: 'bg-emerald-100 text-emerald-800',
-  inactive: 'bg-gray-100 text-gray-600',
-  trial: 'bg-amber-100 text-amber-800',
-};
-
-const paymentLabels: Record<string, string> = {
-  'credit-card': 'Credit Card',
-  'credit_card': 'Credit Card',
-  invoice: 'Invoice',
-  ach: 'ACH',
-  wire: 'Wire',
-};
-
-const cycleLabels: Record<string, string> = {
-  monthly: 'Monthly',
-  annual: 'Annual',
-  'usage-based': 'Usage-based',
-};
-
-function formatDate(iso?: string): string {
+function formatDate(iso?: string | null): string {
   if (!iso) return '—';
   const d = new Date(iso.includes('T') ? iso : iso + 'T00:00:00');
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -53,27 +35,14 @@ function formatDate(iso?: string): string {
 
 interface DetailRowProps {
   label: string;
-  value?: string;
-  href?: boolean;
+  value?: string | null;
 }
 
-function DetailRow({ label, value, href }: DetailRowProps) {
-  const display = value || '—';
+function DetailRow({ label, value }: DetailRowProps) {
   return (
-    <div className="grid grid-cols-[140px_1fr] gap-2 py-1.5">
+    <div className="grid grid-cols-[160px_1fr] gap-2 py-1.5">
       <span className="text-sm text-muted-foreground">{label}</span>
-      {href && value ? (
-        <a
-          href={value}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-primary hover:underline truncate"
-        >
-          {display}
-        </a>
-      ) : (
-        <span className="text-sm">{display}</span>
-      )}
+      <span className="text-sm">{value || '—'}</span>
     </div>
   );
 }
@@ -87,7 +56,7 @@ interface EditRowProps {
 
 function EditRow({ label, value, onChange, type = 'text' }: EditRowProps) {
   return (
-    <div className="grid grid-cols-[140px_1fr] gap-2 py-1.5 items-center">
+    <div className="grid grid-cols-[160px_1fr] gap-2 py-1.5 items-center">
       <label className="text-sm text-muted-foreground">{label}</label>
       <Input
         type={type}
@@ -108,7 +77,7 @@ interface SelectRowProps {
 
 function SelectRow({ label, value, onChange, options }: SelectRowProps) {
   return (
-    <div className="grid grid-cols-[140px_1fr] gap-2 py-1.5 items-center">
+    <div className="grid grid-cols-[160px_1fr] gap-2 py-1.5 items-center">
       <label className="text-sm text-muted-foreground">{label}</label>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="h-8 text-sm">
@@ -132,7 +101,7 @@ interface CheckboxRowProps {
 
 function CheckboxRow({ label, checked, onChange }: CheckboxRowProps) {
   return (
-    <div className="grid grid-cols-[140px_1fr] gap-2 py-1.5 items-center">
+    <div className="grid grid-cols-[160px_1fr] gap-2 py-1.5 items-center">
       <span className="text-sm text-muted-foreground">{label}</span>
       <input
         type="checkbox"
@@ -153,48 +122,38 @@ interface VendorDetailProps {
 }
 
 type FormState = {
-  name: string;
-  category: string;
-  status: VendorStatus;
-  billingCycle: BillingCycle;
-  paymentMethod: PaymentMethod;
-  accountId: string;
-  contractRenews: string;
-  billingContact: string;
-  billingAddress: string;
-  internalContact: string;
-  vendorContact: string;
-  supportEmail: string;
-  supportPhone: string;
-  billingAdmin: string;
-  michaelAdded: boolean;
-  website: string;
-  loginUrl: string;
-  dataSource: string;
-  notes: string;
+  owner: string;
+  secondaryOwner: string;
+  department: string;
+  purpose: string;
+  spendType: string;
+  hide: boolean;
+  contractStartDate: string;
+  contractEndDate: string;
+  contractLengthMonths: string;
+  autoRenew: boolean;
+  renewalRate: string;
+  renewalNoticeDays: string;
+  billingFrequency: string;
+  terminationTerms: string;
 };
 
 function vendorToForm(v: VendorInfo): FormState {
   return {
-    name: v.name ?? '',
-    category: v.category ?? '',
-    status: v.status ?? 'active',
-    billingCycle: v.billingCycle ?? 'monthly',
-    paymentMethod: v.paymentMethod ?? 'credit-card',
-    accountId: v.accountId ?? '',
-    contractRenews: v.contractRenews ?? '',
-    billingContact: v.billingContact ?? '',
-    billingAddress: v.billingAddress ?? '',
-    internalContact: v.internalContact ?? '',
-    vendorContact: v.vendorContact ?? '',
-    supportEmail: v.supportEmail ?? '',
-    supportPhone: v.supportPhone ?? '',
-    billingAdmin: v.billingAdmin ?? '',
-    michaelAdded: v.michaelAdded ?? false,
-    website: v.website ?? '',
-    loginUrl: v.loginUrl ?? '',
-    dataSource: v.dataSource ?? '',
-    notes: v.notes ?? '',
+    owner: v.owner ?? '',
+    secondaryOwner: v.secondaryOwner ?? '',
+    department: v.department ?? '',
+    purpose: v.purpose ?? '',
+    spendType: v.spendType ?? '',
+    hide: v.hide ?? false,
+    contractStartDate: v.contractStartDate ?? '',
+    contractEndDate: v.contractEndDate ?? '',
+    contractLengthMonths: v.contractLengthMonths != null ? String(v.contractLengthMonths) : '',
+    autoRenew: v.autoRenew === true || v.autoRenew === 'true',
+    renewalRate: v.renewalRate != null ? String(v.renewalRate) : '',
+    renewalNoticeDays: v.renewalNoticeDays != null ? String(v.renewalNoticeDays) : '',
+    billingFrequency: v.billingFrequency ?? '',
+    terminationTerms: v.terminationTerms ?? '',
   };
 }
 
@@ -203,30 +162,17 @@ function formToUpdates(form: FormState, original: VendorInfo): Record<string, un
   const updates: Record<string, unknown> = {};
   for (const key of Object.keys(form) as (keyof FormState)[]) {
     if (form[key] !== orig[key]) {
-      updates[key] = form[key];
+      if (key === 'contractLengthMonths' || key === 'renewalNoticeDays') {
+        updates[key] = form[key] === '' ? null : Number(form[key]);
+      } else if (key === 'renewalRate') {
+        updates[key] = form[key] === '' ? null : form[key];
+      } else {
+        updates[key] = form[key];
+      }
     }
   }
   return updates;
 }
-
-const STATUS_OPTIONS: { value: VendorStatus; label: string }[] = [
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
-  { value: 'trial', label: 'Trial' },
-];
-
-const CYCLE_OPTIONS: { value: BillingCycle; label: string }[] = [
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'annual', label: 'Annual' },
-  { value: 'usage-based', label: 'Usage-based' },
-];
-
-const PAYMENT_OPTIONS: { value: PaymentMethod; label: string }[] = [
-  { value: 'credit-card', label: 'Credit Card' },
-  { value: 'invoice', label: 'Invoice' },
-  { value: 'ach', label: 'ACH' },
-  { value: 'wire', label: 'Wire' },
-];
 
 interface PlatformUser {
   email: string;
@@ -311,15 +257,22 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
 
   if (!vendor || !form) return null;
 
+  const memberOptions = vendorMembers.map((u) => ({
+    value: userDisplayName(u),
+    label: userDisplayName(u),
+  }));
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {vendor.name}
-            <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[vendor.status]}`}>
-              {statusLabels[vendor.status]}
-            </span>
+            {vendor.hide && (
+              <span className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                Hidden
+              </span>
+            )}
             {!isEditing && (
               <Button
                 variant="ghost"
@@ -332,114 +285,99 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
               </Button>
             )}
           </DialogTitle>
-          <DialogDescription>{vendor.category}</DialogDescription>
+          <DialogDescription>
+            {vendor.billcomId ? `Bill.com ID: ${vendor.billcomId}` : 'Manually added vendor'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Account & Billing */}
+          {/* Bill.com Data (read-only) */}
           <section>
-            <h3 className="text-sm font-semibold mb-2">Account & Billing</h3>
+            <h3 className="text-sm font-semibold mb-2">Bill.com Data</h3>
             <Separator className="mb-3" />
-            {isEditing ? (
-              <>
-                <EditRow label="Name" value={form.name} onChange={(v) => updateField('name', v)} />
-                <EditRow label="Category" value={form.category} onChange={(v) => updateField('category', v)} />
-                <SelectRow label="Status" value={form.status} onChange={(v) => updateField('status', v as VendorStatus)} options={STATUS_OPTIONS} />
-                <EditRow label="Account ID" value={form.accountId} onChange={(v) => updateField('accountId', v)} />
-                <SelectRow label="Billing cycle" value={form.billingCycle} onChange={(v) => updateField('billingCycle', v as BillingCycle)} options={CYCLE_OPTIONS} />
-                <SelectRow label="Payment method" value={form.paymentMethod} onChange={(v) => updateField('paymentMethod', v as PaymentMethod)} options={PAYMENT_OPTIONS} />
-                <EditRow label="Contract renews" value={form.contractRenews} onChange={(v) => updateField('contractRenews', v)} type="date" />
-                <SelectRow
-                  label="Billing contact"
-                  value={form.billingContact}
-                  onChange={(v) => updateField('billingContact', v)}
-                  options={vendorMembers.map((u) => ({ value: userDisplayName(u), label: userDisplayName(u) }))}
-                />
-                <EditRow label="Billing address" value={form.billingAddress} onChange={(v) => updateField('billingAddress', v)} />
-              </>
-            ) : (
-              <>
-                <DetailRow label="Account ID" value={vendor.accountId} />
-                <DetailRow label="Billing cycle" value={cycleLabels[vendor.billingCycle]} />
-                <DetailRow label="Payment method" value={paymentLabels[vendor.paymentMethod]} />
-                <DetailRow label="Contract renews" value={formatDate(vendor.contractRenews)} />
-                <DetailRow label="Billing contact" value={vendor.billingContact} />
-                <DetailRow label="Billing address" value={vendor.billingAddress} />
-              </>
-            )}
+            <DetailRow label="Bill.com ID" value={vendor.billcomId} />
+            <DetailRow label="Payment method" value={vendor.paymentMethod} />
+            <DetailRow label="Account type" value={vendor.accountType} />
+            <DetailRow label="Track 1099" value={vendor.track1099 ? 'Yes' : 'No'} />
+            <DetailRow label="Source" value={vendor.toolCall} />
+            <DetailRow label="Last synced" value={formatDate(vendor.lastSyncedAt)} />
           </section>
 
-          {/* Contacts */}
+          {/* Ownership (editable) */}
           <section>
-            <h3 className="text-sm font-semibold mb-2">Contacts</h3>
+            <h3 className="text-sm font-semibold mb-2">Ownership</h3>
             <Separator className="mb-3" />
             {isEditing ? (
               <>
                 <SelectRow
-                  label="Internal contact"
-                  value={form.internalContact}
-                  onChange={(v) => updateField('internalContact', v)}
-                  options={vendorMembers.map((u) => ({ value: userDisplayName(u), label: userDisplayName(u) }))}
+                  label="Owner"
+                  value={form.owner}
+                  onChange={(v) => updateField('owner', v)}
+                  options={memberOptions}
                 />
-                <EditRow label="Vendor contact" value={form.vendorContact} onChange={(v) => updateField('vendorContact', v)} />
-                <EditRow label="Support email" value={form.supportEmail} onChange={(v) => updateField('supportEmail', v)} type="email" />
-                <EditRow label="Support phone" value={form.supportPhone} onChange={(v) => updateField('supportPhone', v)} type="tel" />
-                <EditRow label="Billing admin" value={form.billingAdmin} onChange={(v) => updateField('billingAdmin', v)} />
-                <CheckboxRow label="Michael added" checked={form.michaelAdded} onChange={(v) => updateField('michaelAdded', v)} />
+                <SelectRow
+                  label="Secondary owner"
+                  value={form.secondaryOwner}
+                  onChange={(v) => updateField('secondaryOwner', v)}
+                  options={memberOptions}
+                />
+                <EditRow label="Department" value={form.department} onChange={(v) => updateField('department', v)} />
+                <EditRow label="Purpose" value={form.purpose} onChange={(v) => updateField('purpose', v)} />
+                <EditRow label="Spend type" value={form.spendType} onChange={(v) => updateField('spendType', v)} />
+                <CheckboxRow label="Hidden" checked={form.hide} onChange={(v) => updateField('hide', v)} />
               </>
             ) : (
               <>
-                <DetailRow label="Internal contact" value={vendor.internalContact} />
-                <DetailRow label="Vendor contact" value={vendor.vendorContact} />
-                <DetailRow label="Support email" value={vendor.supportEmail} />
-                <DetailRow label="Support phone" value={vendor.supportPhone} />
-                <DetailRow label="Billing admin" value={vendor.billingAdmin} />
-                <DetailRow label="Michael added" value={vendor.michaelAdded ? 'Yes' : 'No'} />
+                <DetailRow label="Owner" value={vendor.owner} />
+                <DetailRow label="Secondary owner" value={vendor.secondaryOwner} />
+                <DetailRow label="Department" value={vendor.department} />
+                <DetailRow label="Purpose" value={vendor.purpose} />
+                <DetailRow label="Spend type" value={vendor.spendType} />
+                <DetailRow label="Hidden" value={vendor.hide ? 'Yes' : 'No'} />
               </>
             )}
           </section>
 
-          {/* Links & Integration */}
+          {/* Contract (editable) */}
           <section>
-            <h3 className="text-sm font-semibold mb-2">Links & Integration</h3>
+            <h3 className="text-sm font-semibold mb-2">Contract</h3>
             <Separator className="mb-3" />
             {isEditing ? (
               <>
-                <EditRow label="Website" value={form.website} onChange={(v) => updateField('website', v)} type="url" />
-                <EditRow label="Login URL" value={form.loginUrl} onChange={(v) => updateField('loginUrl', v)} type="url" />
-                <EditRow label="Data source" value={form.dataSource} onChange={(v) => updateField('dataSource', v)} />
+                <EditRow label="Start date" value={form.contractStartDate} onChange={(v) => updateField('contractStartDate', v)} type="date" />
+                <EditRow label="End date" value={form.contractEndDate} onChange={(v) => updateField('contractEndDate', v)} type="date" />
+                <EditRow label="Length (months)" value={form.contractLengthMonths} onChange={(v) => updateField('contractLengthMonths', v)} type="number" />
+                <CheckboxRow label="Auto-renew" checked={form.autoRenew} onChange={(v) => updateField('autoRenew', v)} />
+                <EditRow label="Renewal rate" value={form.renewalRate} onChange={(v) => updateField('renewalRate', v)} />
+                <EditRow label="Notice days" value={form.renewalNoticeDays} onChange={(v) => updateField('renewalNoticeDays', v)} type="number" />
+                <SelectRow
+                  label="Billing frequency"
+                  value={form.billingFrequency}
+                  onChange={(v) => updateField('billingFrequency', v)}
+                  options={BILLING_FREQUENCY_OPTIONS}
+                />
+                <EditRow label="Termination terms" value={form.terminationTerms} onChange={(v) => updateField('terminationTerms', v)} />
               </>
             ) : (
               <>
-                <DetailRow label="Website" value={vendor.website} href />
-                <DetailRow label="Login URL" value={vendor.loginUrl} href />
-                <DetailRow label="Data source" value={vendor.dataSource} />
+                <DetailRow label="Start date" value={formatDate(vendor.contractStartDate)} />
+                <DetailRow label="End date" value={formatDate(vendor.contractEndDate)} />
+                <DetailRow label="Length (months)" value={vendor.contractLengthMonths != null ? String(vendor.contractLengthMonths) : undefined} />
+                <DetailRow label="Auto-renew" value={vendor.autoRenew != null ? String(vendor.autoRenew) : undefined} />
+                <DetailRow label="Renewal rate" value={vendor.renewalRate != null ? String(vendor.renewalRate) : undefined} />
+                <DetailRow label="Notice days" value={vendor.renewalNoticeDays != null ? String(vendor.renewalNoticeDays) : undefined} />
+                <DetailRow label="Billing frequency" value={vendor.billingFrequency} />
+                <DetailRow label="Termination terms" value={vendor.terminationTerms} />
               </>
             )}
           </section>
 
-          {/* Record */}
+          {/* Record (read-only) */}
           <section>
             <h3 className="text-sm font-semibold mb-2">Record</h3>
             <Separator className="mb-3" />
             <DetailRow label="Created" value={formatDate(vendor.created_at)} />
             <DetailRow label="Last modified" value={formatDate(vendor.modified_at)} />
-          </section>
-
-          {/* Notes */}
-          <section>
-            <h3 className="text-sm font-semibold mb-2">Notes</h3>
-            <Separator className="mb-3" />
-            {isEditing ? (
-              <textarea
-                value={form.notes}
-                onChange={(e) => updateField('notes', e.target.value)}
-                rows={3}
-                className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              />
-            ) : (
-              <p className="text-sm whitespace-pre-wrap">{vendor.notes || '—'}</p>
-            )}
           </section>
 
           {/* Save / Cancel */}

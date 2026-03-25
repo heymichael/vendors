@@ -151,11 +151,6 @@ export function ChatPanel({ open, onClose, onVendorsChanged, onEditVendor }: { o
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 && (
-          <p className="text-sm text-muted-foreground italic">
-            Ask me to add, delete, modify, or look up a vendor.
-          </p>
-        )}
         {messages.filter((m) => !m.hidden).map((m, i) => (
           <div
             key={i}
