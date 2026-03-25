@@ -22,7 +22,8 @@ import { ChatPanel } from './ChatPanel';
 import { ChatToggle } from './ChatToggle';
 import { useAuthUser } from './auth/AuthUserContext';
 import { useVendors } from './useVendors';
-import type { SpendRow, SpendResponse, SpendErrorResponse } from './types';
+import { fetchVendorSpend } from './fetchVendorSpend';
+import type { SpendRow } from './types';
 import './App.css';
 
 function todayISO(): string {
@@ -39,7 +40,6 @@ function sixMonthsAgoISO(): string {
 export function App() {
   const { vendors, loading: vendorsLoading, error: vendorsError, refresh: refreshVendors } = useVendors();
 
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState(sixMonthsAgoISO);
   const [dateTo, setDateTo] = useState(todayISO);
@@ -57,11 +57,9 @@ export function App() {
     if (vendorsLoading || vendors.length === 0) return;
 
     const currentIds = new Set(vendors.map((v) => v.id));
-    const currentCategories = [...new Set(vendors.map((v) => v.category))].sort();
 
     if (!initialized.current) {
       initialized.current = true;
-      setSelectedCategories(currentCategories);
       setSelectedVendors([...currentIds]);
       prevVendorIds.current = currentIds;
       return;
@@ -70,7 +68,6 @@ export function App() {
     const newIds = [...currentIds].filter((id) => !prevVendorIds.current.has(id));
     if (newIds.length > 0) {
       setSelectedVendors((prev) => [...prev, ...newIds]);
-      setSelectedCategories(currentCategories);
     }
     prevVendorIds.current = currentIds;
   }, [vendorsLoading, vendors]);
@@ -99,35 +96,21 @@ export function App() {
     setRows([]);
     setLoading(true);
 
-    const params = new URLSearchParams({
-      vendors: selectedVendors.join(','),
-      from: dateFrom,
-      to: dateTo,
-    });
-
     try {
-      const resp = await fetch(`/vendors/api/spend?${params}`);
-      const body: SpendResponse | SpendErrorResponse = await resp.json();
+      const data = await fetchVendorSpend(selectedVendors, vendors, dateFrom, dateTo);
 
-      if (!resp.ok) {
-        const err = body as SpendErrorResponse;
-        setError(`Error ${resp.status}: ${err.error} — ${err.details}`);
-        return;
-      }
-
-      const data = body as SpendResponse;
-      if (!data.data || data.data.length === 0) {
+      if (data.length === 0) {
         setNoData('No spend data found for the selected vendors in that date range.');
         return;
       }
 
-      setRows(data.data);
+      setRows(data);
     } catch (err) {
-      setError(`Network error: ${err instanceof Error ? err.message : err}`);
+      setError(`Error fetching spend: ${err instanceof Error ? err.message : err}`);
     } finally {
       setLoading(false);
     }
-  }, [selectedVendors, dateFrom, dateTo]);
+  }, [selectedVendors, vendors, dateFrom, dateTo]);
 
   const authUser = useAuthUser();
 
@@ -167,17 +150,17 @@ export function App() {
               </SidebarMenu>
             </SidebarGroup>
 
-            <SidebarGroup>
+            <Separator className="mx-2" />
+
+            <SidebarGroup className="pt-2">
               <SidebarGroupContent>
                 {view === 'spending' ? (
                   <Controls
                     vendors={vendors}
-                    selectedCategories={selectedCategories}
                     selectedVendors={selectedVendors}
                     dateFrom={dateFrom}
                     dateTo={dateTo}
                     loading={loading}
-                    onCategoriesChange={setSelectedCategories}
                     onVendorsChange={setSelectedVendors}
                     onDateFromChange={setDateFrom}
                     onDateToChange={setDateTo}
@@ -187,9 +170,7 @@ export function App() {
                   <div className="flex flex-col gap-3 px-2">
                     <VendorFilters
                       vendors={vendors}
-                      selectedCategories={selectedCategories}
                       selectedVendors={selectedVendors}
-                      onCategoriesChange={setSelectedCategories}
                       onVendorsChange={setSelectedVendors}
                     />
                   </div>

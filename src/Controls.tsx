@@ -7,12 +7,10 @@ import type { VendorInfo } from './types'
 
 interface ControlsProps {
   vendors: VendorInfo[];
-  selectedCategories: string[];
   selectedVendors: string[];
   dateFrom: string;
   dateTo: string;
   loading: boolean;
-  onCategoriesChange: (categories: string[]) => void;
   onVendorsChange: (vendors: string[]) => void;
   onDateFromChange: (date: string) => void;
   onDateToChange: (date: string) => void;
@@ -21,12 +19,10 @@ interface ControlsProps {
 
 export function Controls({
   vendors,
-  selectedCategories,
   selectedVendors,
   dateFrom,
   dateTo,
   loading,
-  onCategoriesChange,
   onVendorsChange,
   onDateFromChange,
   onDateToChange,
@@ -36,9 +32,7 @@ export function Controls({
     <div className="flex flex-col gap-3 px-2">
       <VendorFilters
         vendors={vendors}
-        selectedCategories={selectedCategories}
         selectedVendors={selectedVendors}
-        onCategoriesChange={onCategoriesChange}
         onVendorsChange={onVendorsChange}
       />
 

@@ -1,49 +1,36 @@
-import { useMemo } from 'react';
-import {
-  Button,
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuSeparator,
-} from '@haderach/shared-ui'
+import { useState, useRef, useEffect } from 'react';
+import * as Popover from '@radix-ui/react-popover';
+import { Button, Input } from '@haderach/shared-ui';
+import { Check } from 'lucide-react';
 import type { VendorInfo } from './types';
 
 interface VendorFiltersProps {
   vendors: VendorInfo[];
-  selectedCategories: string[];
   selectedVendors: string[];
-  onCategoriesChange: (categories: string[]) => void;
   onVendorsChange: (vendors: string[]) => void;
 }
 
 export function VendorFilters({
   vendors,
-  selectedCategories,
   selectedVendors,
-  onCategoriesChange,
   onVendorsChange,
 }: VendorFiltersProps) {
-  const allCategories = useMemo(
-    () => [...new Set(vendors.map((v) => v.category))].sort(),
-    [vendors],
-  );
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const filteredVendorOptions = vendors.filter(
-    (v) => selectedCategories.length === 0 || selectedCategories.includes(v.category),
-  );
+  useEffect(() => {
+    if (open) {
+      setSearch('');
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  }, [open]);
 
-  const toggleCategory = (cat: string) => {
-    const next = selectedCategories.includes(cat)
-      ? selectedCategories.filter((c) => c !== cat)
-      : [...selectedCategories, cat];
-    onCategoriesChange(next);
+  const sortedVendors = [...vendors].sort((a, b) => a.name.localeCompare(b.name));
 
-    const vendorsInNextCategories = vendors
-      .filter((v) => next.length === 0 || next.includes(v.category))
-      .map((v) => v.id);
-    onVendorsChange(vendorsInNextCategories);
-  };
+  const filtered = search.trim()
+    ? sortedVendors.filter((v) => v.name.toLowerCase().includes(search.toLowerCase()))
+    : sortedVendors;
 
   const toggleVendor = (id: string) => {
     if (selectedVendors.includes(id)) {
@@ -53,115 +40,94 @@ export function VendorFilters({
     }
   };
 
-  const categoryLabel =
-    selectedCategories.length === 0 || selectedCategories.length === allCategories.length
-      ? 'All categories'
-      : selectedCategories.length === 1
-        ? selectedCategories[0]
-        : `${selectedCategories.length} categories`;
-
   const vendorLabel =
     selectedVendors.length === 0
       ? 'Select vendors'
-      : selectedVendors.length === filteredVendorOptions.length
+      : selectedVendors.length === sortedVendors.length
         ? 'All vendors'
         : selectedVendors.length === 1
           ? vendors.find((v) => v.id === selectedVendors[0])?.name ?? selectedVendors[0]
           : `${selectedVendors.length} vendors selected`;
 
   return (
-    <>
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-sidebar-foreground/70">
-          Category
-        </label>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="w-full justify-start font-normal">
-              {categoryLabel}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <div className="flex gap-1 px-2 py-1.5">
-              <button
-                type="button"
-                className="text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => {
-                  onCategoriesChange([...allCategories]);
-                  onVendorsChange(vendors.map((v) => v.id));
-                }}
-              >
-                Select all
-              </button>
-              <span className="text-xs text-muted-foreground">·</span>
-              <button
-                type="button"
-                className="text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => {
-                  onCategoriesChange([]);
-                  onVendorsChange([]);
-                }}
-              >
-                Clear
-              </button>
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-medium text-sidebar-foreground/70">
+        Vendors
+      </label>
+      <Popover.Root open={open} onOpenChange={setOpen}>
+        <Popover.Trigger asChild>
+          <Button variant="outline" className="w-full justify-start font-normal">
+            {vendorLabel}
+          </Button>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className="z-50 w-64 rounded-lg border border-border bg-background shadow-lg"
+            sideOffset={4}
+            align="start"
+          >
+            <div className="p-2">
+              <Input
+                ref={inputRef}
+                placeholder="Search vendors…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-8 text-sm"
+              />
             </div>
-            <DropdownMenuSeparator />
-            {allCategories.map((cat) => (
-              <DropdownMenuCheckboxItem
-                key={cat}
-                checked={selectedCategories.includes(cat)}
-                onCheckedChange={() => toggleCategory(cat)}
-                onSelect={(e) => e.preventDefault()}
-              >
-                {cat}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
 
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-sidebar-foreground/70">
-          Vendors
-        </label>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="w-full justify-start font-normal">
-              {vendorLabel}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <div className="flex gap-1 px-2 py-1.5">
+            <div className="flex gap-1 px-3 pb-1.5">
               <button
                 type="button"
                 className="text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => onVendorsChange(filteredVendorOptions.map((v) => v.id))}
+                onClick={() => onVendorsChange(filtered.map((v) => v.id))}
               >
-                Select all
+                {search.trim() ? 'Select matches' : 'Select all'}
               </button>
               <span className="text-xs text-muted-foreground">·</span>
               <button
                 type="button"
                 className="text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => onVendorsChange([])}
+                onClick={() => {
+                  if (search.trim()) {
+                    const matchIds = new Set(filtered.map((v) => v.id));
+                    onVendorsChange(selectedVendors.filter((id) => !matchIds.has(id)));
+                  } else {
+                    onVendorsChange([]);
+                  }
+                }}
               >
                 Clear
               </button>
             </div>
-            <DropdownMenuSeparator />
-            {filteredVendorOptions.map((v) => (
-              <DropdownMenuCheckboxItem
-                key={v.id}
-                checked={selectedVendors.includes(v.id)}
-                onCheckedChange={() => toggleVendor(v.id)}
-                onSelect={(e) => e.preventDefault()}
-              >
-                {v.name}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </>
+
+            <div className="border-t border-border max-h-[280px] overflow-y-auto">
+              {filtered.length === 0 ? (
+                <p className="px-3 py-4 text-sm text-muted-foreground text-center">
+                  No vendors found
+                </p>
+              ) : (
+                filtered.map((v) => {
+                  const selected = selectedVendors.includes(v.id);
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent cursor-pointer text-left"
+                      onClick={() => toggleVendor(v.id)}
+                    >
+                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-primary">
+                        {selected && <Check className="h-3 w-3" />}
+                      </span>
+                      <span className="truncate">{v.name}</span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+    </div>
   );
 }
