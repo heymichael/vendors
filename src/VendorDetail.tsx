@@ -205,7 +205,7 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    agentFetch('/agent/api/users?role=vendors_member', getIdToken)
+    agentFetch('/agent/api/users?role=user&role=admin', getIdToken)
       .then((r) => r.json())
       .then((data: PlatformUser[]) => { if (!cancelled) setVendorMembers(data); })
       .catch(() => {});
