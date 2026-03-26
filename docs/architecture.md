@@ -113,6 +113,8 @@ Firestore rules (in `haderach-platform/firestore.rules`): authenticated reads al
 
 The vendors app includes an embedded chat panel (`ChatPanel.tsx`) that communicates with the shared agent service at `/agent/api/chat`. The panel is toggled via a floating button (`ChatToggle.tsx`). The agent can add, modify, delete, and query vendor records in Firestore via OpenAI tool-calling. The `modify_vendor` tool opens the vendor detail modal in edit mode; the user edits fields and saves via `PATCH /agent/api/vendors/:id`.
 
+All requests to the agent service include a Firebase ID token via `Authorization: Bearer <idToken>`. The `agentFetch.ts` helper obtains the token from `firebase.auth().currentUser.getIdToken()` and attaches it to every request. The agent service verifies the token server-side and rejects unauthenticated calls with HTTP 401.
+
 ### Spend queries via chat
 
 The agent can answer live spend questions (e.g. "What's my AWS spend this month?") using the `execute_python` tool. Instead of per-vendor fetcher code, the LLM generates Python at runtime to call billing APIs (boto3 Cost Explorer, etc.) in a sandboxed executor (`agent/service/sandbox.py`). Credentials are available via environment variables — never surfaced in prompts or outputs. The sandbox restricts imports to an allowlist (`boto3`, `json`, `os`, `datetime`, etc.) and enforces a 30-second timeout.
@@ -148,10 +150,12 @@ Response:
 
 ### `PATCH /agent/api/vendors/:vendor_id`
 
+Requires `Authorization: Bearer <idToken>`.
 Partial-update a vendor document. Body is a JSON object of fields to update. Returns the full vendor document after update.
 
 ### `DELETE /agent/api/vendors/:vendor_id`
 
+Requires `Authorization: Bearer <idToken>`.
 Delete a vendor document (called after user confirms deletion in the UI).
 
 ## Routing
