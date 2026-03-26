@@ -9,7 +9,7 @@ import {
   signOut,
   type User,
 } from 'firebase/auth'
-import { fetchUserDoc, buildDisplayName, hasAppAccess, getAccessibleApps, APP_CATALOG, APP_ID } from './accessPolicy'
+import { fetchUserDoc, buildDisplayName, hasAppAccess, getAccessibleApps, getAccessibleAdminApps, APP_CATALOG, APP_ID } from './accessPolicy'
 import { getAuthRuntimeConfig } from './runtimeConfig'
 import { AuthUserContext } from './AuthUserContext'
 import { Button } from '@haderach/shared-ui'
@@ -101,6 +101,7 @@ export function AuthGate({ children }: AuthGateProps) {
 
   if (status === 'authorized') {
     const accessibleApps = runtimeConfig.bypassAuth ? APP_CATALOG : getAccessibleApps(roles)
+    const accessibleAdminApps = runtimeConfig.bypassAuth ? [] : getAccessibleAdminApps(roles)
     return (
       <AuthUserContext.Provider
         value={{
@@ -108,6 +109,7 @@ export function AuthGate({ children }: AuthGateProps) {
           photoURL: user?.photoURL ?? undefined,
           displayName: runtimeConfig.bypassAuth ? 'Dev User' : displayName,
           accessibleApps,
+          accessibleAdminApps,
           signOut: signOutCurrentUser,
           getIdToken: async () => user?.getIdToken() ?? '',
         }}
