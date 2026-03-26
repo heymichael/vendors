@@ -9,6 +9,8 @@ import {
   SelectContent,
   SelectItem,
 } from '@haderach/shared-ui';
+import { useAuthUser } from './auth/AuthUserContext';
+import { agentFetch } from './agentFetch';
 import {
   Dialog,
   DialogContent,
@@ -186,6 +188,7 @@ function userDisplayName(u: PlatformUser): string {
 }
 
 export function VendorDetail({ vendor, open, onClose, editing: editingProp = false, onSave }: VendorDetailProps) {
+  const { getIdToken } = useAuthUser();
   const [isEditing, setIsEditing] = useState(editingProp);
   const [form, setForm] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
@@ -202,7 +205,7 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    fetch('/agent/api/users?role=vendors_member')
+    agentFetch('/agent/api/users?role=vendors_member', getIdToken)
       .then((r) => r.json())
       .then((data: PlatformUser[]) => { if (!cancelled) setVendorMembers(data); })
       .catch(() => {});
@@ -224,7 +227,7 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
     setSaving(true);
     setSaveError(null);
     try {
-      const resp = await fetch(`/agent/api/vendors/${vendor.id}`, {
+      const resp = await agentFetch(`/agent/api/vendors/${vendor.id}`, getIdToken, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),

@@ -7,6 +7,7 @@ export interface AuthUser {
   displayName?: string
   accessibleApps: NavApp[]
   signOut: () => void
+  getIdToken: () => Promise<string>
 }
 
 export const AuthUserContext = createContext<AuthUser | null>(null)
