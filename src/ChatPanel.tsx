@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Markdown from 'react-markdown';
 import { Send, Loader2, PanelRightClose } from 'lucide-react';
 import { Button, Separator, cn } from '@haderach/shared-ui';
+import { useAuthUser } from './auth/AuthUserContext';
+import { agentFetch } from './agentFetch';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -24,6 +26,7 @@ interface ChatResponse {
 const WRITE_TOOLS = new Set(['add_vendor', 'delete_vendor', 'modify_vendor']);
 
 export function ChatPanel({ open, onClose, onVendorsChanged, onEditVendor }: { open: boolean; onClose: () => void; onVendorsChanged?: () => void; onEditVendor?: (vendorId: string) => void }) {
+  const { getIdToken } = useAuthUser();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,7 +54,7 @@ export function ChatPanel({ open, onClose, onVendorsChanged, onEditVendor }: { o
     setLoading(true);
 
     try {
-      const resp = await fetch('/agent/api/chat', {
+      const resp = await agentFetch('/agent/api/chat', getIdToken, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -93,7 +96,7 @@ export function ChatPanel({ open, onClose, onVendorsChanged, onEditVendor }: { o
     if (!pendingDelete) return;
     setDeleting(true);
     try {
-      const resp = await fetch(`/agent/api/vendors/${pendingDelete.vendor_id}`, { method: 'DELETE' });
+      const resp = await agentFetch(`/agent/api/vendors/${pendingDelete.vendor_id}`, getIdToken, { method: 'DELETE' });
       if (resp.ok) {
         setMessages((prev) => [
           ...prev,
