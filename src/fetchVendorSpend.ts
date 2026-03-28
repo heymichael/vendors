@@ -15,6 +15,7 @@ export async function fetchVendorSpend(
   vendors: VendorInfo[],
   dateFrom: string,
   dateTo: string,
+  allowedVendorIdSet?: Set<string> | null,
 ): Promise<SpendRow[]> {
   const app = getOrInitFirebaseApp();
   if (!app) throw new Error('Firebase not initialized');
@@ -23,9 +24,12 @@ export async function fetchVendorSpend(
   const db = getFirestore(app);
 
   const spendKeySet = new Set<string>();
+  const spendKeyToVendorId = new Map<string, string>();
   for (const id of selectedIds) {
     const v = vendors.find((v) => v.id === id);
-    spendKeySet.add(v?.billcomId || id);
+    const key = v?.billcomId || id;
+    spendKeySet.add(key);
+    spendKeyToVendorId.set(key, id);
   }
 
   const startMonth = toMonth(dateFrom);
@@ -44,6 +48,11 @@ export async function fetchVendorSpend(
     const d = doc.data();
     if (d.hide === true) continue;
     if (!spendKeySet.has(d.vendorId)) continue;
+
+    if (allowedVendorIdSet) {
+      const originalId = spendKeyToVendorId.get(d.vendorId) ?? d.vendorId;
+      if (!allowedVendorIdSet.has(originalId)) continue;
+    }
 
     rows.push({
       vendor: d.vendorName ?? d.vendorId,

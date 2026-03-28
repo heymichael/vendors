@@ -9,6 +9,10 @@ export interface AuthUser {
   accessibleAdminApps: NavApp[]
   signOut: () => void
   getIdToken: () => Promise<string>
+  allowedDepartments: string[]
+  allowedVendorIds: string[]
+  deniedVendorIds: string[]
+  isFinanceAdmin: boolean
 }
 
 export const AuthUserContext = createContext<AuthUser | null>(null)

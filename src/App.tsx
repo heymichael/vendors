@@ -37,8 +37,44 @@ function sixMonthsAgoISO(): string {
   return d.toISOString().slice(0, 10);
 }
 
+function resolveEffectiveVendorIds(
+  vendors: import('./types').VendorInfo[],
+  allowedDepartments: string[],
+  allowedVendorIds: string[],
+  deniedVendorIds: string[],
+): Set<string> {
+  const deptSet = new Set(allowedDepartments)
+  const denied = new Set(deniedVendorIds)
+  const ids = new Set<string>()
+
+  for (const v of vendors) {
+    if (v.department && deptSet.has(v.department)) {
+      ids.add(v.id)
+    }
+  }
+  for (const id of allowedVendorIds) {
+    ids.add(id)
+  }
+  for (const id of denied) {
+    ids.delete(id)
+  }
+  return ids
+}
+
 export function App() {
   const { vendors, loading: vendorsLoading, error: vendorsError, refresh: refreshVendors } = useVendors();
+  const authUser = useAuthUser();
+
+  const accessibleVendors = useMemo(() => {
+    if (authUser.isFinanceAdmin) return vendors;
+    const effectiveIds = resolveEffectiveVendorIds(
+      vendors,
+      authUser.allowedDepartments,
+      authUser.allowedVendorIds,
+      authUser.deniedVendorIds,
+    );
+    return vendors.filter((v) => effectiveIds.has(v.id));
+  }, [vendors, authUser.isFinanceAdmin, authUser.allowedDepartments, authUser.allowedVendorIds, authUser.deniedVendorIds]);
 
   const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState(sixMonthsAgoISO);
@@ -54,9 +90,9 @@ export function App() {
   const initialized = useRef(false);
   const prevVendorIds = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (vendorsLoading || vendors.length === 0) return;
+    if (vendorsLoading || accessibleVendors.length === 0) return;
 
-    const currentIds = new Set(vendors.map((v) => v.id));
+    const currentIds = new Set(accessibleVendors.map((v) => v.id));
 
     if (!initialized.current) {
       initialized.current = true;
@@ -70,12 +106,22 @@ export function App() {
       setSelectedVendors((prev) => [...prev, ...newIds]);
     }
     prevVendorIds.current = currentIds;
-  }, [vendorsLoading, vendors]);
+  }, [vendorsLoading, accessibleVendors]);
 
   const filteredVendors = useMemo(
-    () => vendors.filter((v) => selectedVendors.includes(v.id)),
-    [vendors, selectedVendors],
+    () => accessibleVendors.filter((v) => selectedVendors.includes(v.id)),
+    [accessibleVendors, selectedVendors],
   );
+
+  const effectiveVendorIdSet = useMemo(() => {
+    if (authUser.isFinanceAdmin) return null;
+    return resolveEffectiveVendorIds(
+      vendors,
+      authUser.allowedDepartments,
+      authUser.allowedVendorIds,
+      authUser.deniedVendorIds,
+    );
+  }, [vendors, authUser.isFinanceAdmin, authUser.allowedDepartments, authUser.allowedVendorIds, authUser.deniedVendorIds]);
 
   const handleFetch = useCallback(async () => {
     if (selectedVendors.length === 0) {
@@ -97,7 +143,7 @@ export function App() {
     setLoading(true);
 
     try {
-      const data = await fetchVendorSpend(selectedVendors, vendors, dateFrom, dateTo);
+      const data = await fetchVendorSpend(selectedVendors, accessibleVendors, dateFrom, dateTo, effectiveVendorIdSet);
 
       if (data.length === 0) {
         setNoData('No spend data found for the selected vendors in that date range.');
@@ -110,9 +156,7 @@ export function App() {
     } finally {
       setLoading(false);
     }
-  }, [selectedVendors, vendors, dateFrom, dateTo]);
-
-  const authUser = useAuthUser();
+  }, [selectedVendors, accessibleVendors, dateFrom, dateTo, effectiveVendorIdSet]);
 
   return (
     <div className="app-shell">
@@ -157,7 +201,7 @@ export function App() {
               <SidebarGroupContent>
                 {view === 'spending' ? (
                   <Controls
-                    vendors={vendors}
+                    vendors={accessibleVendors}
                     selectedVendors={selectedVendors}
                     dateFrom={dateFrom}
                     dateTo={dateTo}
@@ -170,7 +214,7 @@ export function App() {
                 ) : (
                   <div className="flex flex-col gap-3 px-2">
                     <VendorFilters
-                      vendors={vendors}
+                      vendors={accessibleVendors}
                       selectedVendors={selectedVendors}
                       onVendorsChange={setSelectedVendors}
                     />
