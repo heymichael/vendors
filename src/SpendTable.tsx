@@ -39,5 +39,5 @@ export function SpendTable({ rows }: SpendTableProps) {
 
   if (rows.length === 0) return null;
 
-  return <DataTable columns={columns} data={pivotData} csvFilename="vendor-spend.csv" />;
+  return <DataTable columns={columns} data={pivotData} />;
 }

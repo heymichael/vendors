@@ -8,16 +8,14 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from '@haderach/shared-ui';
-import { useAuthUser } from './auth/AuthUserContext';
-import { agentFetch } from './agentFetch';
-import {
+  agentFetch,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from './components/ui/dialog';
+} from '@haderach/shared-ui';
+import { useAuthUser } from './auth/AuthUserContext';
 import { Loader2, Pencil } from 'lucide-react';
 import type { VendorInfo } from './types';
 
@@ -205,7 +203,7 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    agentFetch('/agent/api/users?role=user&role=admin', getIdToken)
+    agentFetch('/users?role=user&role=admin', getIdToken)
       .then((r) => r.json())
       .then((data: PlatformUser[]) => { if (!cancelled) setVendorMembers(data); })
       .catch(() => {});
@@ -227,7 +225,7 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
     setSaving(true);
     setSaveError(null);
     try {
-      const resp = await agentFetch(`/agent/api/vendors/${vendor.id}`, getIdToken, {
+      const resp = await agentFetch(`/vendors/${vendor.id}`, getIdToken, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),

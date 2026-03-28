@@ -1,27 +1,19 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@haderach/shared-ui';
 import { SpendChart } from './SpendChart';
 import { SpendTable } from './SpendTable';
 import type { SpendRow } from './types';
+import type { SpendViewMode } from './SpendToolbar';
 
 interface SpendDataViewProps {
   rows: SpendRow[];
+  viewMode: SpendViewMode;
 }
 
-export function SpendDataView({ rows }: SpendDataViewProps) {
+export function SpendDataView({ rows, viewMode }: SpendDataViewProps) {
   if (rows.length === 0) return null;
 
-  return (
-    <Tabs defaultValue="chart">
-      <TabsList>
-        <TabsTrigger value="chart">Chart</TabsTrigger>
-        <TabsTrigger value="table">Table</TabsTrigger>
-      </TabsList>
-      <TabsContent value="chart">
-        <SpendChart rows={rows} />
-      </TabsContent>
-      <TabsContent value="table">
-        <SpendTable rows={rows} />
-      </TabsContent>
-    </Tabs>
+  return viewMode === 'chart' ? (
+    <SpendChart rows={rows} />
+  ) : (
+    <SpendTable rows={rows} />
   );
 }

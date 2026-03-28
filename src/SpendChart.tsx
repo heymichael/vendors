@@ -1,15 +1,20 @@
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList } from 'recharts';
 import type { SpendRow } from './types';
 
-const CHART_HEIGHT = 500;
+const CHART_HEIGHT = 750;
 
 const VENDOR_COLORS = [
-  'var(--color-chart-1)',
-  'var(--color-chart-2)',
-  'var(--color-chart-3)',
-  'var(--color-chart-4)',
-  'var(--color-chart-5)',
+  '#6b9bd2',
+  '#7bc8a4',
+  '#d4a574',
+  '#b491c8',
+  '#e8a0a0',
+  '#8cc5c5',
+  '#c4b078',
+  '#a0b8d8',
+  '#c9a0c9',
+  '#90c490',
 ];
 
 const currencyFmt = new Intl.NumberFormat('en-US', {
@@ -17,6 +22,13 @@ const currencyFmt = new Intl.NumberFormat('en-US', {
   currency: 'USD',
   maximumFractionDigits: 0,
   minimumFractionDigits: 0,
+});
+
+const compactFmt = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  notation: 'compact',
+  maximumFractionDigits: 1,
 });
 
 interface SpendChartProps {
@@ -31,6 +43,7 @@ interface ChartDatum {
 export function SpendChart({ rows }: SpendChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const [activeVendor, setActiveVendor] = useState<string | null>(null);
 
   const measure = useCallback(() => {
     if (containerRef.current) {
@@ -78,6 +91,12 @@ export function SpendChart({ rows }: SpendChartProps) {
     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   };
 
+  const colorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    vendors.forEach((v, i) => map.set(v, VENDOR_COLORS[i % VENDOR_COLORS.length]));
+    return map;
+  }, [vendors]);
+
   return (
     <div
       ref={containerRef}
@@ -90,6 +109,7 @@ export function SpendChart({ rows }: SpendChartProps) {
           height={CHART_HEIGHT}
           data={chartData}
           margin={{ top: 10, right: 10, bottom: 20, left: 20 }}
+          onMouseLeave={() => setActiveVendor(null)}
         >
           <CartesianGrid vertical={false} stroke="var(--color-border)" />
           <XAxis
@@ -108,16 +128,14 @@ export function SpendChart({ rows }: SpendChartProps) {
             tickFormatter={(v: number) => currencyFmt.format(v)}
           />
           <Tooltip
+            cursor={false}
             content={({ active, payload }) => {
-              if (!active || !payload?.length) return null;
+              if (!active || !payload?.length || !activeVendor) return null;
+              const entry = payload.find((p) => p.name === activeVendor);
+              if (!entry) return null;
               return (
-                <div className="rounded-lg border border-border bg-background px-3 py-2 text-sm shadow-lg">
-                  {payload.map((entry) => (
-                    <p key={entry.name} style={{ color: entry.color }} className="flex justify-between gap-4">
-                      <span>{entry.name}</span>
-                      <span className="font-mono">{currencyFmt.format(Number(entry.value))}</span>
-                    </p>
-                  ))}
+                <div className="rounded-md border border-border bg-background px-3 py-1.5 text-sm shadow-md">
+                  {entry.name}
                 </div>
               );
             }}
@@ -127,9 +145,30 @@ export function SpendChart({ rows }: SpendChartProps) {
               key={vendor}
               dataKey={vendor}
               stackId="spend"
-              fill={VENDOR_COLORS[i % VENDOR_COLORS.length]}
+              fill={colorMap.get(vendor)}
               radius={i === vendors.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
-            />
+              onMouseEnter={() => setActiveVendor(vendor)}
+            >
+              {chartData.map((_, idx) => (
+                <Cell
+                  key={idx}
+                  fillOpacity={!activeVendor || activeVendor === vendor ? 1 : 0.5}
+                />
+              ))}
+              {activeVendor === vendor && (
+                <LabelList
+                  dataKey={vendor}
+                  position="center"
+                  formatter={(v: number) => v > 0 ? compactFmt.format(v) : ''}
+                  style={{
+                    fill: '#fff',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                  }}
+                />
+              )}
+            </Bar>
           ))}
         </BarChart>
       )}
