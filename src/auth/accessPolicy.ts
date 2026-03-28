@@ -1,5 +1,4 @@
-import { doc, getDoc, getFirestore } from 'firebase/firestore'
-import type { FirebaseApp } from 'firebase/app'
+import { agentFetch } from '@haderach/shared-ui'
 
 export {
   APP_CATALOG,
@@ -14,10 +13,6 @@ export type { NavApp as AccessibleApp } from '@haderach/shared-ui'
 
 export const APP_ID = 'vendors'
 
-function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase()
-}
-
 export interface UserDoc {
   roles: string[]
   firstName: string
@@ -27,20 +22,19 @@ export interface UserDoc {
   deniedVendorIds: string[]
 }
 
-export async function fetchUserDoc(app: FirebaseApp, email: string): Promise<UserDoc> {
+export async function fetchUserDoc(getIdToken: () => Promise<string>, email: string): Promise<UserDoc> {
   const empty: UserDoc = { roles: [], firstName: '', lastName: '', allowedDepartments: [], allowedVendorIds: [], deniedVendorIds: [] }
   try {
-    const db = getFirestore(app)
-    const snap = await getDoc(doc(db, 'users', normalizeEmail(email)))
-    if (!snap.exists()) return empty
-    const data = snap.data()
+    const res = await agentFetch(`/users/${encodeURIComponent(email.trim().toLowerCase())}`, getIdToken)
+    if (!res.ok) return empty
+    const data = await res.json()
     return {
       roles: Array.isArray(data.roles) ? data.roles : [],
-      firstName: typeof data.first_name === 'string' ? data.first_name : '',
-      lastName: typeof data.last_name === 'string' ? data.last_name : '',
-      allowedDepartments: Array.isArray(data.allowed_departments) ? data.allowed_departments : [],
-      allowedVendorIds: Array.isArray(data.allowed_vendor_ids) ? data.allowed_vendor_ids : [],
-      deniedVendorIds: Array.isArray(data.denied_vendor_ids) ? data.denied_vendor_ids : [],
+      firstName: typeof data.firstName === 'string' ? data.firstName : '',
+      lastName: typeof data.lastName === 'string' ? data.lastName : '',
+      allowedDepartments: Array.isArray(data.allowedDepartments) ? data.allowedDepartments : [],
+      allowedVendorIds: Array.isArray(data.allowedVendorIds) ? data.allowedVendorIds : [],
+      deniedVendorIds: Array.isArray(data.deniedVendorIds) ? data.deniedVendorIds : [],
     }
   } catch {
     return empty
