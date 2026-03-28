@@ -1,0 +1,10 @@
+---
+description: Local dev testing procedure — pointer to platform rule
+alwaysApply: true
+---
+
+# Local Dev Testing
+
+Follow the full procedure defined in `../haderach-platform/.cursor/rules/local-dev-testing.mdc`.
+
+This app runs on port **5174** and requires the **agent service** (port 8080) for chat and spend tools.

@@ -22,10 +22,13 @@ export interface UserDoc {
   roles: string[]
   firstName: string
   lastName: string
+  allowedDepartments: string[]
+  allowedVendorIds: string[]
+  deniedVendorIds: string[]
 }
 
 export async function fetchUserDoc(app: FirebaseApp, email: string): Promise<UserDoc> {
-  const empty: UserDoc = { roles: [], firstName: '', lastName: '' }
+  const empty: UserDoc = { roles: [], firstName: '', lastName: '', allowedDepartments: [], allowedVendorIds: [], deniedVendorIds: [] }
   try {
     const db = getFirestore(app)
     const snap = await getDoc(doc(db, 'users', normalizeEmail(email)))
@@ -35,6 +38,9 @@ export async function fetchUserDoc(app: FirebaseApp, email: string): Promise<Use
       roles: Array.isArray(data.roles) ? data.roles : [],
       firstName: typeof data.first_name === 'string' ? data.first_name : '',
       lastName: typeof data.last_name === 'string' ? data.last_name : '',
+      allowedDepartments: Array.isArray(data.allowed_departments) ? data.allowed_departments : [],
+      allowedVendorIds: Array.isArray(data.allowed_vendor_ids) ? data.allowed_vendor_ids : [],
+      deniedVendorIds: Array.isArray(data.denied_vendor_ids) ? data.denied_vendor_ids : [],
     }
   } catch {
     return empty
