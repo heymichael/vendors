@@ -159,12 +159,23 @@ export function SpendChart({ rows }: SpendChartProps) {
                 <LabelList
                   dataKey={vendor}
                   position="center"
-                  formatter={(v: number) => v > 0 ? compactFmt.format(v) : ''}
-                  style={{
-                    fill: '#fff',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                  content={({ x, y, width: w, height: h, value }) => {
+                    const num = Number(value);
+                    if (!num || !w || !h || Number(h) < 16) return null;
+                    return (
+                      <text
+                        x={Number(x) + Number(w) / 2}
+                        y={Number(y) + Number(h) / 2}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fill="#fff"
+                        fontSize={11}
+                        fontWeight={600}
+                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                      >
+                        {compactFmt.format(num)}
+                      </text>
+                    );
                   }}
                 />
               )}
