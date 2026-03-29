@@ -2,7 +2,7 @@
 
 ## Overview
 
-The vendors app tracks monthly spend across software vendors (AWS, Cursor, GCS, etc.). It follows the same SPA + backend service pattern as the stocks app. Vendor metadata is stored in Firestore and streamed to the UI in real-time via `onSnapshot`.
+The vendors app tracks monthly spend across software vendors (AWS, Cursor, GCS, etc.). It follows the same SPA + backend service pattern as the stocks app. All data flows through the agent service API (`/agent/api/`) — no direct Firestore access from the frontend.
 
 ## Repo Layout
 
@@ -38,27 +38,22 @@ vendors/
 │   │   ├── AuthGate.tsx
 │   │   ├── AuthUserContext.ts
 │   │   └── runtimeConfig.ts
-│   ├── components/
-│   │   └── ui/
-│   │       └── dialog.tsx        # Radix Dialog (center modal)
 │   ├── App.tsx                   # Root component (GlobalNav + Sidebar layout)
-│   ├── App.css                   # Shell layout and sidebar positioning
-│   ├── ChatPanel.tsx             # Agent chat panel (calls /agent/api/chat)
-│   ├── ChatToggle.tsx            # Floating button to open/close chat
-│   ├── Controls.tsx              # Vendor + date filters (embedded in Sidebar)
-│   ├── SpendChart.tsx            # Recharts stacked BarChart
-│   ├── SpendDataView.tsx         # Tabbed container (Chart | Table toggle)
-│   ├── SpendTable.tsx            # Pivot table (vendors × months)
-│   ├── VendorDetail.tsx          # Vendor detail dialog (view + edit modal)
-│   ├── VendorFilters.tsx         # Category + vendor multi-select filters
-│   ├── VendorList.tsx            # Vendor metadata table
-│   ├── index.css                 # Theme tokens + sidebar tokens
-│   ├── main.tsx
-│   ├── spend-columns.tsx         # Dynamic spend column definitions
-│   ├── types.ts                  # Vendor + spend types
-│   ├── useVendors.ts             # Real-time Firestore vendor subscription
-│   ├── vendor-columns.tsx        # Vendor table column definitions
-│   └── vite-env.d.ts
+    │   ├── SpendChart.tsx            # Recharts stacked BarChart
+    │   ├── SpendDataView.tsx         # Tabbed container (Chart | Table toggle)
+    │   ├── SpendTable.tsx            # Pivot table (vendors × months)
+    │   ├── SpendToolbar.tsx          # Dept/vendor/date filters toolbar
+    │   ├── VendorDetail.tsx          # Vendor detail dialog (view + edit modal)
+    │   ├── VendorList.tsx            # Vendor metadata table
+    │   ├── fetchVendorSpend.ts       # Spend data fetcher (agentFetch → /agent/api/spend)
+    │   ├── groupSpendRows.ts         # Spend data grouping/pivot helpers
+    │   ├── index.css                 # Theme tokens + sidebar tokens
+    │   ├── main.tsx
+    │   ├── spend-columns.tsx         # Dynamic spend column definitions
+    │   ├── types.ts                  # Vendor + spend types
+    │   ├── useVendors.ts             # Vendor list fetcher (agentFetch → /agent/api/vendors)
+    │   ├── vendor-columns.tsx        # Vendor table column definitions
+    │   └── vite-env.d.ts
 ├── .env.example
 ├── .gitignore
 ├── firebase.json                 # Hosting config (headers, rewrites, emulator)
@@ -74,19 +69,25 @@ vendors/
 
 ## Data Flow
 
-### Vendor metadata (real-time)
+### Vendor metadata
 
-1. `useVendors` hook subscribes to the Firestore `vendors` collection via `onSnapshot`
-2. Vendor list, filters, and detail dialog are driven by live data
-3. In auth-bypass mode, the hook initializes Firebase and signs in anonymously
+1. `useVendors` hook fetches the vendor list via `agentFetch('/vendors', getIdToken)`
+2. The agent service reads the Firestore `vendors` collection server-side and returns the list
+3. Vendor list, filters, and detail dialog are driven by the fetched data
 
 ### Spend data (on-demand)
 
-1. User selects vendors and date range in sidebar, clicks Fetch
-2. Frontend calls `GET /vendors/api/spend?vendors=aws&from=YYYY-MM-DD&to=YYYY-MM-DD`
-3. FastAPI backend calls AWS Cost Explorer (`ce.get_cost_and_usage`)
-4. Backend returns `{ data: [{ vendor, month, amount }] }`
+1. User selects vendors and date range in the toolbar
+2. Frontend calls `agentFetch('/spend?vendors=aws&from=YYYY-MM-DD&to=YYYY-MM-DD', getIdToken)`
+3. Agent service calls AWS Cost Explorer (`ce.get_cost_and_usage`) server-side
+4. Returns `{ data: [{ vendor, month, amount }] }`
 5. Frontend renders stacked bar chart and pivot table
+
+### Vendor mutations
+
+1. Edits go through `agentFetch('/vendors/:id', getIdToken, { method: 'PATCH', body })` 
+2. Deletes go through `agentFetch('/vendors/:id', getIdToken, { method: 'DELETE' })`
+3. The agent service handles all Firestore writes server-side
 
 ## Firestore Schema
 
@@ -111,7 +112,7 @@ Firestore rules (in `haderach-platform/firestore.rules`): authenticated reads al
 
 ## Chat UI
 
-The vendors app includes an embedded chat panel (`ChatPanel.tsx`) that communicates with the shared agent service at `/agent/api/chat`. The panel is toggled via a floating button (`ChatToggle.tsx`). The agent can add, modify, delete, and query vendor records in Firestore via OpenAI tool-calling. The `modify_vendor` tool opens the vendor detail modal in edit mode; the user edits fields and saves via `PATCH /agent/api/vendors/:id`.
+The vendors app includes an embedded chat panel (`ChatPanel` from `@haderach/shared-ui`) that communicates with the shared agent service at `/agent/api/chat`. The panel is toggled via a floating button (`ChatToggle` from `@haderach/shared-ui`). The agent can add, modify, delete, and query vendor records in Firestore via OpenAI tool-calling. The `modify_vendor` tool opens the vendor detail modal in edit mode; the user edits fields and saves via `PATCH /agent/api/vendors/:id`.
 
 All requests to the agent service include a Firebase ID token via `Authorization: Bearer <idToken>`. The `agentFetch` helper (from `@haderach/shared-ui`) obtains the token via `getIdToken()` and attaches it to every request. The agent service verifies the token server-side and rejects unauthenticated calls with HTTP 401. This same mechanism is used for user doc resolution: `fetchUserDoc` calls `GET /agent/api/me` to retrieve roles and profile data (replacing earlier direct Firestore reads).
 
@@ -186,7 +187,7 @@ Delete a vendor document (called after user confirms deletion in the UI).
 2. Start backend: `cd service && pip install -r requirements.txt && uvicorn app:app --port 5002`
 3. Start frontend: `npm run dev` (Vite proxies `/vendors/api` to `localhost:5002` and `/agent/api` to `localhost:8080`)
 
-In auth-bypass mode, the `useVendors` hook signs in anonymously to satisfy Firestore rules. Anonymous auth must be enabled in the Firebase project.
+In auth-bypass mode, the app skips sign-in and renders with mock user data. No agent service or Firestore connection is needed.
 
 ### Seeding vendor data
 
