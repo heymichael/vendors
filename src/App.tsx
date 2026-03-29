@@ -26,6 +26,7 @@ import { VendorList } from './VendorList';
 import { useAuthUser } from './auth/AuthUserContext';
 import { useVendors } from './useVendors';
 import { fetchVendorSpend } from './fetchVendorSpend';
+import { groupSpendRows } from './groupSpendRows';
 import type { SpendRow } from './types';
 import './App.css';
 
@@ -150,11 +151,11 @@ export function App() {
       setLoading(true);
 
       try {
-        const data = await fetchVendorSpend(effectiveVendorIds, dateFrom, dateTo, authUser.getIdToken);
-        if (data.length === 0) {
+        const raw = await fetchVendorSpend(effectiveVendorIds, dateFrom, dateTo, authUser.getIdToken);
+        if (raw.length === 0) {
           setNoData('No spend data found for the selected vendors in that date range.');
         }
-        setRows(data);
+        setRows(groupSpendRows(raw));
       } catch (err) {
         setError(`Error fetching spend: ${err instanceof Error ? err.message : err}`);
       } finally {

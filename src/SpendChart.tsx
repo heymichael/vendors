@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList } from 'recharts';
 import type { SpendRow } from './types';
+import { OTHER_VENDOR } from './groupSpendRows';
 
 const CHART_HEIGHT = 750;
 
@@ -91,9 +92,19 @@ export function SpendChart({ rows }: SpendChartProps) {
     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   };
 
+  const OTHER_COLOR = '#b0b0b0';
+
   const colorMap = useMemo(() => {
     const map = new Map<string, string>();
-    vendors.forEach((v, i) => map.set(v, VENDOR_COLORS[i % VENDOR_COLORS.length]));
+    let ci = 0;
+    for (const v of vendors) {
+      if (v === OTHER_VENDOR) {
+        map.set(v, OTHER_COLOR);
+      } else {
+        map.set(v, VENDOR_COLORS[ci % VENDOR_COLORS.length]);
+        ci++;
+      }
+    }
     return map;
   }, [vendors]);
 

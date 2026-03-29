@@ -1,6 +1,8 @@
 import { agentFetch } from '@haderach/shared-ui';
 import type { SpendRow } from './types';
 
+const VENDOR_URL_THRESHOLD = 30;
+
 function toMonth(dateStr: string): string {
   return dateStr.slice(0, 7);
 }
@@ -15,8 +17,11 @@ export async function fetchVendorSpend(
   const endMonth = toMonth(dateTo);
 
   const params = new URLSearchParams();
-  for (const id of selectedIds) {
-    params.append('vendor_ids', id);
+  const omitVendorIds = selectedIds.length > VENDOR_URL_THRESHOLD;
+  if (!omitVendorIds) {
+    for (const id of selectedIds) {
+      params.append('vendor_ids', id);
+    }
   }
   params.set('from', startMonth);
   params.set('to', endMonth);
@@ -25,5 +30,12 @@ export async function fetchVendorSpend(
   if (!res.ok) throw new Error(`Failed to fetch spend data: ${res.status}`);
 
   const body = await res.json();
-  return body.data as SpendRow[];
+  let data = body.data as SpendRow[];
+
+  if (omitVendorIds) {
+    const selected = new Set(selectedIds);
+    data = data.filter((r) => selected.has(r.vendor));
+  }
+
+  return data;
 }
