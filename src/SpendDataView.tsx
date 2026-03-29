@@ -12,7 +12,9 @@ export function SpendDataView({ rows, viewMode }: SpendDataViewProps) {
   if (rows.length === 0) return null;
 
   return viewMode === 'chart' ? (
-    <SpendChart rows={rows} />
+    <div className="flex flex-1 min-h-0 flex-col">
+      <SpendChart rows={rows} />
+    </div>
   ) : (
     <SpendTable rows={rows} />
   );

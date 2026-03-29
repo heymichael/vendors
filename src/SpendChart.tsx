@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList } 
 import type { SpendRow } from './types';
 import { OTHER_VENDOR } from './groupSpendRows';
 
-const CHART_HEIGHT = 750;
+const MIN_CHART_HEIGHT = 400;
 
 const VENDOR_COLORS = [
   '#6b9bd2',
@@ -44,11 +44,13 @@ interface ChartDatum {
 export function SpendChart({ rows }: SpendChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
   const [activeVendor, setActiveVendor] = useState<string | null>(null);
 
   const measure = useCallback(() => {
     if (containerRef.current) {
       setWidth(containerRef.current.clientWidth);
+      setHeight(containerRef.current.clientHeight);
     }
   }, []);
 
@@ -62,28 +64,30 @@ export function SpendChart({ rows }: SpendChartProps) {
   }, [measure]);
 
   const { chartData, vendors } = useMemo(() => {
-    const vendorSet = new Set<string>();
+    const totalByVendor = new Map<string, number>();
     const monthMap = new Map<string, Record<string, number>>();
 
     for (const row of rows) {
-      vendorSet.add(row.vendor);
+      totalByVendor.set(row.vendor, (totalByVendor.get(row.vendor) ?? 0) + row.amount);
       const existing = monthMap.get(row.month) ?? {};
       existing[row.vendor] = (existing[row.vendor] ?? 0) + row.amount;
       monthMap.set(row.month, existing);
     }
 
     const sortedMonths = [...monthMap.keys()].sort();
-    const sortedVendors = [...vendorSet].sort();
+    const rankedVendors = [...totalByVendor.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([v]) => v);
 
     const chartData: ChartDatum[] = sortedMonths.map((month) => {
       const entry: ChartDatum = { month };
-      for (const vendor of sortedVendors) {
+      for (const vendor of rankedVendors) {
         entry[vendor] = monthMap.get(month)?.[vendor] ?? 0;
       }
       return entry;
     });
 
-    return { chartData, vendors: sortedVendors };
+    return { chartData, vendors: rankedVendors };
   }, [rows]);
 
   const formatMonth = (month: string) => {
@@ -108,16 +112,17 @@ export function SpendChart({ rows }: SpendChartProps) {
     return map;
   }, [vendors]);
 
+  const chartHeight = Math.max(height - 32, MIN_CHART_HEIGHT);
+
   return (
     <div
       ref={containerRef}
-      className="rounded-lg border border-border bg-surface p-4"
-      style={{ minHeight: CHART_HEIGHT }}
+      className="flex-1 min-h-0 rounded-lg bg-surface p-4"
     >
-      {width > 0 && (
+      {width > 0 && height > 0 && (
         <BarChart
           width={width - 32}
-          height={CHART_HEIGHT}
+          height={chartHeight}
           data={chartData}
           margin={{ top: 10, right: 10, bottom: 20, left: 20 }}
           onMouseLeave={() => setActiveVendor(null)}
@@ -138,19 +143,21 @@ export function SpendChart({ rows }: SpendChartProps) {
             fontSize={14}
             tickFormatter={(v: number) => currencyFmt.format(v)}
           />
-          <Tooltip
-            cursor={false}
-            content={({ active, payload }) => {
-              if (!active || !payload?.length || !activeVendor) return null;
-              const entry = payload.find((p) => p.name === activeVendor);
-              if (!entry) return null;
-              return (
-                <div className="rounded-md border border-border bg-background px-3 py-1.5 text-sm shadow-md">
-                  {entry.name}
-                </div>
-              );
-            }}
-          />
+          {activeVendor && (
+            <Tooltip
+              cursor={false}
+              content={({ active, payload }) => {
+                if (!active || !payload?.length || !activeVendor) return null;
+                const entry = payload.find((p) => p.name === activeVendor);
+                if (!entry) return null;
+                return (
+                  <div className="rounded-md border border-border bg-background px-3 py-1.5 text-sm shadow-md">
+                    {entry.name}
+                  </div>
+                );
+              }}
+            />
+          )}
           {vendors.map((vendor, i) => (
             <Bar
               key={vendor}
@@ -159,11 +166,12 @@ export function SpendChart({ rows }: SpendChartProps) {
               fill={colorMap.get(vendor)}
               radius={i === vendors.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
               onMouseEnter={() => setActiveVendor(vendor)}
+              onMouseLeave={() => setActiveVendor(null)}
             >
               {chartData.map((_, idx) => (
                 <Cell
                   key={idx}
-                  fillOpacity={!activeVendor || activeVendor === vendor ? 1 : 0.5}
+                  fillOpacity={!activeVendor || activeVendor === vendor ? 1 : 0.65}
                 />
               ))}
               {activeVendor === vendor && (
@@ -172,17 +180,18 @@ export function SpendChart({ rows }: SpendChartProps) {
                   position="center"
                   content={({ x, y, width: w, height: h, value }) => {
                     const num = Number(value);
-                    if (!num || !w || !h || Number(h) < 16) return null;
+                    if (!num || !w || !h) return null;
+                    const barH = Number(h);
                     return (
                       <text
                         x={Number(x) + Number(w) / 2}
-                        y={Number(y) + Number(h) / 2}
+                        y={Number(y) + barH / 2}
                         textAnchor="middle"
                         dominantBaseline="central"
                         fill="#fff"
                         fontSize={11}
                         fontWeight={600}
-                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
                       >
                         {compactFmt.format(num)}
                       </text>

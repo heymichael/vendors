@@ -34,7 +34,7 @@ export async function fetchVendorSpend(
 
   if (omitVendorIds) {
     const selected = new Set(selectedIds);
-    data = data.filter((r) => selected.has(r.vendor));
+    data = data.filter((r) => selected.has(r.vendorId));
   }
 
   return data;

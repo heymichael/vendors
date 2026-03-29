@@ -243,7 +243,7 @@ export function App() {
                   </div>
                 )}
                 {view === 'spending' && (
-                  <div className="flex flex-1 min-h-0 flex-col pt-[72px]">
+                  <div className="flex flex-1 min-h-0 flex-col">
                     <SpendToolbar
                       vendors={vendors}
                       selectedVendors={selectedVendors}
@@ -261,7 +261,7 @@ export function App() {
                     {error && (
                       <div className="px-4 pt-2 text-sm text-red-600">{error}</div>
                     )}
-                    <div className="flex-1 min-h-0 overflow-y-auto px-4">
+                    <div className="flex flex-1 min-h-0 flex-col px-4">
                       {loading && (
                         <div className="flex items-center justify-center py-12">
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
