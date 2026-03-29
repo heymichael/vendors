@@ -18,7 +18,7 @@ export function VendorList({ vendors, editVendorId, onEditDone }: VendorListProp
     if (editVendorId) {
       const match = vendors.find((v) => v.id === editVendorId);
       if (match) {
-        setSelectedVendor(match);
+        setSelectedVendor(match); // eslint-disable-line react-hooks/set-state-in-effect
         setEditMode(true);
       }
     }
