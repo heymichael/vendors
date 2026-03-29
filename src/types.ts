@@ -28,6 +28,7 @@ export interface VendorInfo {
 
 export interface SpendRow {
   vendor: string;
+  vendorId: string;
   month: string;
   amount: number;
 }
