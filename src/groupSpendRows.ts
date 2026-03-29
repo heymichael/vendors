@@ -33,7 +33,7 @@ export function groupSpendRows(rows: SpendRow[], maxVendors = MAX_VENDORS): Spen
   }
 
   for (const [month, amount] of otherByMonth) {
-    kept.push({ vendor: OTHER_VENDOR, month, amount });
+    kept.push({ vendor: OTHER_VENDOR, vendorId: OTHER_VENDOR, month, amount });
   }
 
   return kept;
