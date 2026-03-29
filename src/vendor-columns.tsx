@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import type { ColumnDef } from '@haderach/shared-ui';
 import { Button } from '@haderach/shared-ui';
 import { ArrowUpDown } from 'lucide-react';
