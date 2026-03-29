@@ -49,9 +49,9 @@ export function SpendToolbar({
   )
 
   return (
-    <div className="flex flex-wrap items-end gap-4 border-b border-border px-4 py-3">
-      <div className="flex flex-col gap-1 min-w-[240px] flex-1 max-w-xs">
-        <label className="text-xs font-medium text-muted-foreground">
+    <div className="flex flex-wrap items-end gap-3 border-b border-border px-4 py-2">
+      <div className="flex flex-col gap-0.5 min-w-[160px] max-w-[200px]">
+        <label className="text-[0.65rem] font-medium text-muted-foreground">
           Department
         </label>
         <MultiSelect
@@ -63,8 +63,8 @@ export function SpendToolbar({
         />
       </div>
 
-      <div className="flex flex-col gap-1 min-w-[240px] flex-1 max-w-xs">
-        <label className="text-xs font-medium text-muted-foreground">
+      <div className="flex flex-col gap-0.5 min-w-[160px] max-w-[200px]">
+        <label className="text-[0.65rem] font-medium text-muted-foreground">
           Vendor
         </label>
         <MultiSelect
@@ -77,24 +77,24 @@ export function SpendToolbar({
       </div>
 
       <div className="flex items-end gap-2">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">
+        <div className="flex flex-col gap-0.5">
+          <label className="text-[0.65rem] font-medium text-muted-foreground">
             From
           </label>
           <Input
             type="date"
-            className="w-[160px]"
+            className="w-[140px] text-xs"
             value={dateFrom}
             onChange={(e) => onDateFromChange(e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">
+        <div className="flex flex-col gap-0.5">
+          <label className="text-[0.65rem] font-medium text-muted-foreground">
             To
           </label>
           <Input
             type="date"
-            className="w-[160px]"
+            className="w-[140px] text-xs"
             value={dateTo}
             onChange={(e) => onDateToChange(e.target.value)}
           />
