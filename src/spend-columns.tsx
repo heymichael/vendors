@@ -19,6 +19,16 @@ export function buildSpendColumns(months: string[]): ColumnDef<PivotRow>[] {
   const vendorCol: ColumnDef<PivotRow> = {
     accessorKey: 'vendor',
     header: () => <span className="font-bold text-sm">Vendor</span>,
+    cell: ({ row }) => {
+      const name = row.getValue('vendor') as string;
+      return (
+        <span className="block truncate" title={name}>
+          {name}
+        </span>
+      );
+    },
+    size: 220,
+    minSize: 120,
   };
 
   const monthCols: ColumnDef<PivotRow>[] = months.map((month) => ({
