@@ -8,12 +8,13 @@ export {
   hasAppAccess,
   getAccessibleApps,
   getAccessibleAdminApps,
+  buildDisplayName,
 } from '@haderach/shared-ui'
 export type { NavApp as AccessibleApp } from '@haderach/shared-ui'
 
 export const APP_ID = 'vendors'
 
-export interface UserDoc {
+export interface VendorUserDoc {
   roles: string[]
   firstName: string
   lastName: string
@@ -22,8 +23,8 @@ export interface UserDoc {
   deniedVendorIds: string[]
 }
 
-export async function fetchUserDoc(getIdToken: () => Promise<string>): Promise<UserDoc> {
-  const empty: UserDoc = { roles: [], firstName: '', lastName: '', allowedDepartments: [], allowedVendorIds: [], deniedVendorIds: [] }
+export async function fetchUserDoc(getIdToken: () => Promise<string>): Promise<VendorUserDoc> {
+  const empty: VendorUserDoc = { roles: [], firstName: '', lastName: '', allowedDepartments: [], allowedVendorIds: [], deniedVendorIds: [] }
   try {
     const res = await agentFetch('/me', getIdToken)
     if (!res.ok) return empty
@@ -39,9 +40,4 @@ export async function fetchUserDoc(getIdToken: () => Promise<string>): Promise<U
   } catch {
     return empty
   }
-}
-
-export function buildDisplayName(firstName: string, lastName: string): string | undefined {
-  const full = [firstName, lastName].filter(Boolean).join(' ')
-  return full || undefined
 }
