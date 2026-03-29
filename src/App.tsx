@@ -184,7 +184,6 @@ export function App() {
     <div className="app-shell">
       <GlobalNav
         apps={authUser.accessibleApps}
-        adminApps={authUser.accessibleAdminApps}
         activeAppId="vendors"
         userEmail={authUser.email}
         userPhotoURL={authUser.photoURL}
