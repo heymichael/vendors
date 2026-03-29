@@ -1,23 +1,14 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
-  GlobalNav,
-  SidebarProvider,
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarRail,
-  SidebarInset,
-  SidebarTrigger,
-  Separator,
+  AppRail,
+  PaneToolbar,
+  PaneLayout,
   ChatPanel,
-  ChatToggle,
   Button,
   agentFetch,
 } from '@haderach/shared-ui';
-import type { ChatPanelHandle, ChatPendingAction } from '@haderach/shared-ui';
+import type { ChatPanelHandle, ChatPendingAction, PaneId, PaneLayoutHandle } from '@haderach/shared-ui';
+
 import { Loader2 } from 'lucide-react';
 import { SpendToolbar } from './SpendToolbar';
 import type { SpendViewMode } from './SpendToolbar';
@@ -55,13 +46,16 @@ export function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [noData, setNoData] = useState<string | null>(null);
-  const [view, setView] = useState<'spending' | 'vendors'>('vendors');
   const [spendViewMode, setSpendViewMode] = useState<SpendViewMode>('chart');
-  const [chatOpen, setChatOpen] = useState(false);
   const [editVendorId, setEditVendorId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ChatPendingAction | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [railExpanded, setRailExpanded] = useState(true);
+  const [chatOpen, setChatOpen] = useState(true);
+  const [detailPane, setDetailPane] = useState<'analytics' | 'data' | null>('analytics');
+
   const chatRef = useRef<ChatPanelHandle>(null);
+  const paneRef = useRef<PaneLayoutHandle>(null);
 
   const handleToolResult = useCallback((toolNames: string[]) => {
     if (toolNames.some((t) => WRITE_TOOLS.has(t))) refreshVendors();
@@ -71,7 +65,7 @@ export function App() {
     if (action.type === 'confirm_delete') {
       setPendingDelete(action);
     } else if (action.type === 'open_edit') {
-      setView('vendors');
+      paneRef.current?.togglePane('data');
       setEditVendorId(action.vendor_id as string);
     }
   }, []);
@@ -103,6 +97,15 @@ export function App() {
     }
     setPendingDelete(null);
   }, [pendingDelete]);
+
+  const handlePaneToggle = useCallback((id: PaneId) => {
+    paneRef.current?.togglePane(id);
+  }, []);
+
+  const handleLayoutChange = useCallback((chat: boolean, detail: 'analytics' | 'data' | null) => {
+    setChatOpen(chat);
+    setDetailPane(detail);
+  }, []);
 
   const initialized = useRef(false);
   const prevVendorIds = useRef<Set<string>>(new Set());
@@ -137,7 +140,7 @@ export function App() {
   }, [selectedVendors, selectedDepartments, vendors]);
 
   useEffect(() => {
-    if (view !== 'spending') return;
+    if (detailPane !== 'analytics') return;
     if (effectiveVendorIds.length === 0 || !dateFrom || !dateTo) {
       setRows([]);
       setNoData(effectiveVendorIds.length === 0 ? 'Select vendors or departments to view spend data.' : null);
@@ -164,7 +167,7 @@ export function App() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [view, effectiveVendorIds, dateFrom, dateTo, authUser.getIdToken]);
+  }, [detailPane, effectiveVendorIds, dateFrom, dateTo, authUser.getIdToken]);
 
   const handleDownloadCsv = useCallback(() => {
     if (rows.length === 0) return;
@@ -182,117 +185,93 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <GlobalNav
+      <AppRail
         apps={authUser.accessibleApps}
         activeAppId="vendors"
+        expanded={railExpanded}
+        onToggle={() => setRailExpanded((e) => !e)}
         userEmail={authUser.email}
         userPhotoURL={authUser.photoURL}
         userDisplayName={authUser.displayName}
         onSignOut={authUser.signOut}
-        logo={
-          <img
-            className="h-12 w-auto"
-            src="/assets/landing/logo.svg"
-            alt="Haderach"
-          />
-        }
       />
 
-      <SidebarProvider className="min-h-0 flex-1">
-        <Sidebar collapsible="offcanvas">
-          <SidebarContent>
-            <SidebarGroup className="pt-14">
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={view === 'vendors'} onClick={() => setView('vendors')}>
-                    Vendors
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={view === 'spending'} onClick={() => setView('spending')}>
-                    Spending
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroup>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <PaneToolbar
+          activePanes={{
+            chat: chatOpen,
+            analytics: detailPane === 'analytics',
+            data: detailPane === 'data',
+          }}
+          onPaneToggle={handlePaneToggle}
+        />
 
-          </SidebarContent>
-
-          <SidebarRail />
-        </Sidebar>
-
-        <SidebarInset className="overflow-hidden">
-          <div className="flex h-full min-w-0">
-            <div className="flex min-w-0 flex-1 flex-col">
-              <header className="flex h-12 items-center gap-2 border-b px-4">
-                <SidebarTrigger />
-                <Separator orientation="vertical" className="h-4" />
-            <h1 className="text-lg font-semibold">
-              Vendor Management
-            </h1>
-                <div className="ml-auto">
-                  <ChatToggle open={chatOpen} onToggle={() => setChatOpen((o) => !o)} />
-                </div>
-              </header>
-
-              <div className="display-panel">
-                {vendorsError && (
-                  <div className="p-4 text-sm text-red-600 bg-red-50 rounded m-4">
-                    Error loading vendors: {vendorsError}
-                  </div>
-                )}
-                {view === 'spending' && (
-                  <div className="flex flex-1 min-h-0 flex-col">
-                    <SpendToolbar
-                      vendors={vendors}
-                      selectedVendors={selectedVendors}
-                      onVendorsChange={setSelectedVendors}
-                      selectedDepartments={selectedDepartments}
-                      onDepartmentsChange={setSelectedDepartments}
-                      dateFrom={dateFrom}
-                      dateTo={dateTo}
-                      onDateFromChange={setDateFrom}
-                      onDateToChange={setDateTo}
-                      viewMode={spendViewMode}
-                      onViewModeChange={setSpendViewMode}
-                      onDownload={handleDownloadCsv}
-                    />
-                    {error && (
-                      <div className="px-4 pt-2 text-sm text-red-600">{error}</div>
-                    )}
-                    <div className="flex flex-1 min-h-0 flex-col px-4">
-                      {loading && (
-                        <div className="flex items-center justify-center py-12">
-                          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                        </div>
-                      )}
-                      {noData && <p className="no-data">{noData}</p>}
-                      {!loading && <SpendDataView rows={rows} viewMode={spendViewMode} />}
-                    </div>
-                  </div>
-                )}
-                {view === 'vendors' && (
-                  <VendorList
-                    vendors={vendors}
-                    editVendorId={editVendorId}
-                    onEditDone={() => { setEditVendorId(null); refreshVendors(); }}
-                  />
-                )}
-              </div>
-            </div>
-
+        <PaneLayout
+          ref={paneRef}
+          chatOpen={chatOpen}
+          detailPane={detailPane}
+          onLayoutChange={handleLayoutChange}
+          chatContent={
             <ChatPanel
               ref={chatRef}
-              open={chatOpen}
-              onClose={() => setChatOpen(false)}
+              mode="panel"
               appContext="vendors"
               getIdToken={authUser.getIdToken}
               onToolResult={handleToolResult}
               onPendingAction={handlePendingAction}
             />
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+          }
+          analyticsContent={
+            <div className="flex flex-1 min-h-0 flex-col p-2">
+              {vendorsError && (
+                <div className="p-4 text-sm text-red-600 bg-red-50 rounded m-4">
+                  Error loading vendors: {vendorsError}
+                </div>
+              )}
+              <SpendToolbar
+                vendors={vendors}
+                selectedVendors={selectedVendors}
+                onVendorsChange={setSelectedVendors}
+                selectedDepartments={selectedDepartments}
+                onDepartmentsChange={setSelectedDepartments}
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+                onDateFromChange={setDateFrom}
+                onDateToChange={setDateTo}
+                viewMode={spendViewMode}
+                onViewModeChange={setSpendViewMode}
+                onDownload={handleDownloadCsv}
+              />
+              {error && (
+                <div className="px-4 pt-2 text-sm text-red-600">{error}</div>
+              )}
+              <div className="flex flex-1 min-h-0 flex-col px-4">
+                {loading && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                {noData && <p className="no-data">{noData}</p>}
+                {!loading && <SpendDataView rows={rows} viewMode={spendViewMode} />}
+              </div>
+            </div>
+          }
+          dataContent={
+            <div className="flex flex-1 min-h-0 flex-col p-5">
+              {vendorsError && (
+                <div className="p-4 text-sm text-red-600 bg-red-50 rounded m-4">
+                  Error loading vendors: {vendorsError}
+                </div>
+              )}
+              <VendorList
+                vendors={vendors}
+                editVendorId={editVendorId}
+                onEditDone={() => { setEditVendorId(null); refreshVendors(); }}
+              />
+            </div>
+          }
+        />
+      </div>
 
       {pendingDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
