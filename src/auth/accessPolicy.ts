@@ -22,10 +22,10 @@ export interface UserDoc {
   deniedVendorIds: string[]
 }
 
-export async function fetchUserDoc(getIdToken: () => Promise<string>, email: string): Promise<UserDoc> {
+export async function fetchUserDoc(getIdToken: () => Promise<string>): Promise<UserDoc> {
   const empty: UserDoc = { roles: [], firstName: '', lastName: '', allowedDepartments: [], allowedVendorIds: [], deniedVendorIds: [] }
   try {
-    const res = await agentFetch(`/users/${encodeURIComponent(email.trim().toLowerCase())}`, getIdToken)
+    const res = await agentFetch('/me', getIdToken)
     if (!res.ok) return empty
     const data = await res.json()
     return {
