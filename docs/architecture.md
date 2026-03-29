@@ -34,7 +34,7 @@ vendors/
 │   └── requirements.txt
 ├── src/                          # React + Vite SPA (TypeScript)
 │   ├── auth/                     # Firebase Auth gate (platform-delegated sign-in)
-│   │   ├── accessPolicy.ts       # RBAC (imports catalog from @haderach/shared-ui)
+│   │   ├── accessPolicy.ts       # RBAC + fetchUserDoc (imports shared helpers from @haderach/shared-ui)
 │   │   ├── AuthGate.tsx
 │   │   ├── AuthUserContext.ts
 │   │   └── runtimeConfig.ts
@@ -113,7 +113,13 @@ Firestore rules (in `haderach-platform/firestore.rules`): authenticated reads al
 
 The vendors app includes an embedded chat panel (`ChatPanel.tsx`) that communicates with the shared agent service at `/agent/api/chat`. The panel is toggled via a floating button (`ChatToggle.tsx`). The agent can add, modify, delete, and query vendor records in Firestore via OpenAI tool-calling. The `modify_vendor` tool opens the vendor detail modal in edit mode; the user edits fields and saves via `PATCH /agent/api/vendors/:id`.
 
-All requests to the agent service include a Firebase ID token via `Authorization: Bearer <idToken>`. The `agentFetch.ts` helper obtains the token from `firebase.auth().currentUser.getIdToken()` and attaches it to every request. The agent service verifies the token server-side and rejects unauthenticated calls with HTTP 401.
+All requests to the agent service include a Firebase ID token via `Authorization: Bearer <idToken>`. The `agentFetch` helper (from `@haderach/shared-ui`) obtains the token via `getIdToken()` and attaches it to every request. The agent service verifies the token server-side and rejects unauthenticated calls with HTTP 401. This same mechanism is used for user doc resolution: `fetchUserDoc` calls `GET /agent/api/me` to retrieve roles and profile data (replacing earlier direct Firestore reads).
+
+### Authentication
+
+Authentication is centralized at the platform level. Auth primitives (`buildDisplayName`) and RBAC helpers (`APP_CATALOG`, `APP_GRANTING_ROLES`, `hasAppAccess`, `getAccessibleApps`) are imported from `@haderach/shared-ui`. `AuthUser` extends `BaseAuthUser` (from shared-ui) with vendor-specific fields (`allowedDepartments`, `allowedVendorIds`, `deniedVendorIds`, `isFinanceAdmin`). The vendor-extended `fetchUserDoc` is kept locally since it returns additional spend-filtering fields.
+
+In production, unauthenticated users are redirected to `/?returnTo=/vendors/` for platform sign-in. In local dev (`import.meta.env.DEV`), the app shows a dev-only "Sign in with Google" button instead of redirecting, allowing authentication directly on the app's origin without requiring haderach-home to be running.
 
 ### Spend queries via chat
 
