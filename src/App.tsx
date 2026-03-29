@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   AppRail,
+  useRailExpanded,
   PaneToolbar,
   PaneLayout,
   ChatPanel,
@@ -38,6 +39,9 @@ export function App() {
   const { vendors, loading: vendorsLoading, error: vendorsError, refresh: refreshVendors } = useVendors();
   const authUser = useAuthUser();
 
+  const getIdTokenRef = useRef(authUser.getIdToken);
+  getIdTokenRef.current = authUser.getIdToken;
+
   const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState(sixMonthsAgoISO);
@@ -50,7 +54,7 @@ export function App() {
   const [editVendorId, setEditVendorId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ChatPendingAction | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [railExpanded, setRailExpanded] = useState(true);
+  const [railExpanded, toggleRail] = useRailExpanded();
   const [chatOpen, setChatOpen] = useState(true);
   const [detailPane, setDetailPane] = useState<'analytics' | 'data' | null>('analytics');
 
@@ -154,7 +158,7 @@ export function App() {
       setLoading(true);
 
       try {
-        const raw = await fetchVendorSpend(effectiveVendorIds, dateFrom, dateTo, authUser.getIdToken);
+        const raw = await fetchVendorSpend(effectiveVendorIds, dateFrom, dateTo, getIdTokenRef.current);
         if (raw.length === 0) {
           setNoData('No spend data found for the selected vendors in that date range.');
         }
@@ -167,7 +171,7 @@ export function App() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [detailPane, effectiveVendorIds, dateFrom, dateTo, authUser.getIdToken]);
+  }, [detailPane, effectiveVendorIds, dateFrom, dateTo]);
 
   const handleDownloadCsv = useCallback(() => {
     if (rows.length === 0) return;
@@ -189,7 +193,7 @@ export function App() {
         apps={authUser.accessibleApps}
         activeAppId="vendors"
         expanded={railExpanded}
-        onToggle={() => setRailExpanded((e) => !e)}
+        onToggle={toggleRail}
         userEmail={authUser.email}
         userPhotoURL={authUser.photoURL}
         userDisplayName={authUser.displayName}
