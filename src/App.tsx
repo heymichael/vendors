@@ -226,41 +226,43 @@ export function App() {
           }
           analyticsContent={
             <div className="flex flex-1 min-h-0 flex-col p-2">
-              {vendorsError && (
-                <div className="p-4 text-sm text-red-600 bg-red-50 rounded m-4">
-                  Error loading vendors: {vendorsError}
-                </div>
-              )}
-              <SpendToolbar
-                vendors={vendors}
-                selectedVendors={selectedVendors}
-                onVendorsChange={setSelectedVendors}
-                selectedDepartments={selectedDepartments}
-                onDepartmentsChange={setSelectedDepartments}
-                dateFrom={dateFrom}
-                dateTo={dateTo}
-                onDateFromChange={setDateFrom}
-                onDateToChange={setDateTo}
-                viewMode={spendViewMode}
-                onViewModeChange={setSpendViewMode}
-                onDownload={handleDownloadCsv}
-              />
-              {error && (
-                <div className="px-4 pt-2 text-sm text-red-600">{error}</div>
-              )}
-              <div className="flex flex-1 min-h-0 flex-col px-4">
-                {loading && (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <div className="flex flex-1 min-h-0 flex-col rounded-xl border border-border bg-card shadow-sm">
+                {vendorsError && (
+                  <div className="p-4 text-sm text-red-600 bg-red-50 rounded m-4">
+                    Error loading vendors: {vendorsError}
                   </div>
                 )}
-                {noData && <p className="no-data">{noData}</p>}
-                {!loading && <SpendDataView rows={rows} viewMode={spendViewMode} />}
+                <SpendToolbar
+                  vendors={vendors}
+                  selectedVendors={selectedVendors}
+                  onVendorsChange={setSelectedVendors}
+                  selectedDepartments={selectedDepartments}
+                  onDepartmentsChange={setSelectedDepartments}
+                  dateFrom={dateFrom}
+                  dateTo={dateTo}
+                  onDateFromChange={setDateFrom}
+                  onDateToChange={setDateTo}
+                  viewMode={spendViewMode}
+                  onViewModeChange={setSpendViewMode}
+                  onDownload={handleDownloadCsv}
+                />
+                {error && (
+                  <div className="px-4 pt-2 text-sm text-red-600">{error}</div>
+                )}
+                <div className="flex flex-1 min-h-0 flex-col px-4">
+                  {loading && (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                  {noData && <p className="no-data">{noData}</p>}
+                  {!loading && <SpendDataView rows={rows} viewMode={spendViewMode} />}
+                </div>
               </div>
             </div>
           }
           dataContent={
-            <div className="flex flex-1 min-h-0 flex-col p-5">
+            <div className="flex flex-1 min-h-0 flex-col p-2">
               {vendorsError && (
                 <div className="p-4 text-sm text-red-600 bg-red-50 rounded m-4">
                   Error loading vendors: {vendorsError}

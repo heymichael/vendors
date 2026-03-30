@@ -9,7 +9,7 @@ function SortableHeader({ column, label }: { column: { toggleSorting: (desc: boo
     <Button
       variant="ghost"
       size="sm"
-      className="text-xs font-bold"
+      className="text-xs font-medium"
       onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
     >
       {label}
