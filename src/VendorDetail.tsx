@@ -127,7 +127,6 @@ type FormState = {
   department: string;
   purpose: string;
   spendType: string;
-  hide: boolean;
   contractStartDate: string;
   contractEndDate: string;
   contractLengthMonths: string;
@@ -145,7 +144,6 @@ function vendorToForm(v: VendorInfo): FormState {
     department: v.department ?? '',
     purpose: v.purpose ?? '',
     spendType: v.spendType ?? '',
-    hide: v.hide ?? false,
     contractStartDate: v.contractStartDate ?? '',
     contractEndDate: v.contractEndDate ?? '',
     contractLengthMonths: v.contractLengthMonths != null ? String(v.contractLengthMonths) : '',
@@ -269,11 +267,6 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {vendor.name}
-            {vendor.hide && (
-              <span className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-                Hidden
-              </span>
-            )}
             {!isEditing && (
               <Button
                 variant="ghost"
@@ -325,7 +318,6 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
                 <EditRow label="Department" value={form.department} onChange={(v) => updateField('department', v)} />
                 <EditRow label="Purpose" value={form.purpose} onChange={(v) => updateField('purpose', v)} />
                 <EditRow label="Spend type" value={form.spendType} onChange={(v) => updateField('spendType', v)} />
-                <CheckboxRow label="Hidden" checked={form.hide} onChange={(v) => updateField('hide', v)} />
               </>
             ) : (
               <>
@@ -334,7 +326,6 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
                 <DetailRow label="Department" value={vendor.department} />
                 <DetailRow label="Purpose" value={vendor.purpose} />
                 <DetailRow label="Spend type" value={vendor.spendType} />
-                <DetailRow label="Hidden" value={vendor.hide ? 'Yes' : 'No'} />
               </>
             )}
           </section>
