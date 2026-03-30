@@ -144,7 +144,6 @@ export function App() {
   }, [selectedVendors, selectedDepartments, vendors]);
 
   useEffect(() => {
-    if (detailPane !== 'analytics') return;
     if (effectiveVendorIds.length === 0 || !dateFrom || !dateTo) {
       setRows([]);
       setNoData(effectiveVendorIds.length === 0 ? 'Select vendors or departments to view spend data.' : null);
@@ -171,7 +170,7 @@ export function App() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [detailPane, effectiveVendorIds, dateFrom, dateTo]);
+  }, [effectiveVendorIds, dateFrom, dateTo]);
 
   const handleDownloadCsv = useCallback(() => {
     if (rows.length === 0) return;

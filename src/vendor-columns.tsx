@@ -26,7 +26,7 @@ export function buildVendorColumns(onVendorClick: (vendor: VendorInfo) => void):
       cell: ({ row }) => (
         <button
           type="button"
-          className="font-medium text-primary hover:underline text-left"
+          className="block w-full truncate font-medium text-primary hover:underline text-left"
           onClick={() => onVendorClick(row.original)}
         >
           {row.getValue('name')}
