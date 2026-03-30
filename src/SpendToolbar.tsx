@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { MultiSelect, Input, Button } from '@haderach/shared-ui'
+import { MultiSelect, Button } from '@haderach/shared-ui'
 import { BarChart3, Table2, Download } from 'lucide-react'
 import { cn } from '@haderach/shared-ui'
 import type { VendorInfo } from './types'
@@ -57,8 +57,8 @@ export function SpendToolbar({
   }, [vendors, selectedDepartments])
 
   return (
-    <div className="flex flex-wrap items-end gap-3 border-b border-border px-4 py-2">
-      <div className="flex flex-col gap-0.5 min-w-[160px] max-w-[200px]">
+    <div className="flex flex-wrap items-end gap-6 px-4 py-2">
+      <div className="flex flex-col gap-0.5 min-w-[120px]">
         <label className="text-xs font-medium text-muted-foreground">
           Department
         </label>
@@ -67,10 +67,11 @@ export function SpendToolbar({
           selectedIds={selectedDepartments}
           onSelectionChange={onDepartmentsChange}
           searchPlaceholder="Search departments…"
+          variant="underline"
         />
       </div>
 
-      <div className="flex flex-col gap-0.5 min-w-[160px] max-w-[200px]">
+      <div className="flex flex-col gap-0.5 min-w-[120px]">
         <label className="text-xs font-medium text-muted-foreground">
           Vendor
         </label>
@@ -79,17 +80,18 @@ export function SpendToolbar({
           selectedIds={selectedVendors}
           onSelectionChange={onVendorsChange}
           searchPlaceholder="Search vendors…"
+          variant="underline"
         />
       </div>
 
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-4">
         <div className="flex flex-col gap-0.5">
           <label className="text-xs font-medium text-muted-foreground">
             From
           </label>
-          <Input
+          <input
             type="date"
-            className="w-[130px] text-xs md:text-xs [&::-webkit-calendar-picker-indicator]:h-3.5 [&::-webkit-calendar-picker-indicator]:w-3.5 [&::-webkit-calendar-picker-indicator]:opacity-60"
+            className="h-8 w-[120px] border-b border-border bg-transparent pb-1 text-xs outline-none [&::-webkit-calendar-picker-indicator]:h-3.5 [&::-webkit-calendar-picker-indicator]:w-3.5 [&::-webkit-calendar-picker-indicator]:opacity-60"
             value={dateFrom}
             onChange={(e) => onDateFromChange(e.target.value)}
           />
@@ -98,9 +100,9 @@ export function SpendToolbar({
           <label className="text-xs font-medium text-muted-foreground">
             To
           </label>
-          <Input
+          <input
             type="date"
-            className="w-[130px] text-xs md:text-xs [&::-webkit-calendar-picker-indicator]:h-3.5 [&::-webkit-calendar-picker-indicator]:w-3.5 [&::-webkit-calendar-picker-indicator]:opacity-60"
+            className="h-8 w-[120px] border-b border-border bg-transparent pb-1 text-xs outline-none [&::-webkit-calendar-picker-indicator]:h-3.5 [&::-webkit-calendar-picker-indicator]:w-3.5 [&::-webkit-calendar-picker-indicator]:opacity-60"
             value={dateTo}
             onChange={(e) => onDateToChange(e.target.value)}
           />

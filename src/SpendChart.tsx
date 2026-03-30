@@ -117,7 +117,7 @@ export function SpendChart({ rows }: SpendChartProps) {
   return (
     <div
       ref={containerRef}
-      className="flex-1 min-h-0 rounded-lg bg-surface p-4"
+      className="flex-1 min-h-0 p-4"
     >
       {width > 0 && height > 0 && (
         <BarChart
