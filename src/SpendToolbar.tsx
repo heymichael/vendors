@@ -66,7 +66,6 @@ export function SpendToolbar({
           items={departmentItems}
           selectedIds={selectedDepartments}
           onSelectionChange={onDepartmentsChange}
-          placeholder="All departments"
           searchPlaceholder="Search departments…"
         />
       </div>
@@ -79,7 +78,6 @@ export function SpendToolbar({
           items={vendorItems}
           selectedIds={selectedVendors}
           onSelectionChange={onVendorsChange}
-          placeholder="All vendors"
           searchPlaceholder="Search vendors…"
         />
       </div>
