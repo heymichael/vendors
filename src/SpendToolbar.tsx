@@ -36,22 +36,30 @@ export function SpendToolbar({
   onDownload,
 }: SpendToolbarProps) {
   const departmentItems = useMemo(() => {
+    const pool = selectedVendors.length === 0
+      ? vendors
+      : vendors.filter((v) => selectedVendors.includes(v.id))
     const depts = new Set<string>()
-    for (const v of vendors) {
+    for (const v of pool) {
       if (v.department) depts.add(v.department)
     }
     return [...depts].sort().map((d) => ({ id: d, label: d }))
-  }, [vendors])
+  }, [vendors, selectedVendors])
 
-  const vendorItems = useMemo(
-    () => vendors.map((v) => ({ id: v.id, label: v.name })),
-    [vendors],
-  )
+  const vendorItems = useMemo(() => {
+    if (selectedDepartments.length === 0) {
+      return vendors.map((v) => ({ id: v.id, label: v.name }))
+    }
+    const deptSet = new Set(selectedDepartments)
+    return vendors
+      .filter((v) => v.department && deptSet.has(v.department))
+      .map((v) => ({ id: v.id, label: v.name }))
+  }, [vendors, selectedDepartments])
 
   return (
     <div className="flex flex-wrap items-end gap-3 border-b border-border px-4 py-2">
       <div className="flex flex-col gap-0.5 min-w-[160px] max-w-[200px]">
-        <label className="text-[0.65rem] font-medium text-muted-foreground">
+        <label className="text-xs font-medium text-muted-foreground">
           Department
         </label>
         <MultiSelect
@@ -64,7 +72,7 @@ export function SpendToolbar({
       </div>
 
       <div className="flex flex-col gap-0.5 min-w-[160px] max-w-[200px]">
-        <label className="text-[0.65rem] font-medium text-muted-foreground">
+        <label className="text-xs font-medium text-muted-foreground">
           Vendor
         </label>
         <MultiSelect
@@ -78,23 +86,23 @@ export function SpendToolbar({
 
       <div className="flex items-end gap-2">
         <div className="flex flex-col gap-0.5">
-          <label className="text-[0.65rem] font-medium text-muted-foreground">
+          <label className="text-xs font-medium text-muted-foreground">
             From
           </label>
           <Input
             type="date"
-            className="w-[140px] text-xs"
+            className="w-[130px] text-xs md:text-xs [&::-webkit-calendar-picker-indicator]:h-3.5 [&::-webkit-calendar-picker-indicator]:w-3.5 [&::-webkit-calendar-picker-indicator]:opacity-60"
             value={dateFrom}
             onChange={(e) => onDateFromChange(e.target.value)}
           />
         </div>
         <div className="flex flex-col gap-0.5">
-          <label className="text-[0.65rem] font-medium text-muted-foreground">
+          <label className="text-xs font-medium text-muted-foreground">
             To
           </label>
           <Input
             type="date"
-            className="w-[140px] text-xs"
+            className="w-[130px] text-xs md:text-xs [&::-webkit-calendar-picker-indicator]:h-3.5 [&::-webkit-calendar-picker-indicator]:w-3.5 [&::-webkit-calendar-picker-indicator]:opacity-60"
             value={dateTo}
             onChange={(e) => onDateToChange(e.target.value)}
           />

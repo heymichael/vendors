@@ -167,7 +167,7 @@ export function App() {
       } finally {
         setLoading(false);
       }
-    }, 500);
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, [effectiveVendorIds, dateFrom, dateTo]);

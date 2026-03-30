@@ -133,14 +133,14 @@ export function SpendChart({ rows }: SpendChartProps) {
             tickLine={false}
             axisLine={false}
             tickMargin={12}
-            fontSize={14}
+            fontSize={12}
             tickFormatter={formatMonth}
           />
           <YAxis
             tickLine={false}
             axisLine={false}
             tickMargin={8}
-            fontSize={14}
+            fontSize={12}
             tickFormatter={(v: number) => currencyFmt.format(v)}
           />
           {activeVendor && (
