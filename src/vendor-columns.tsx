@@ -9,7 +9,7 @@ function SortableHeader({ column, label }: { column: { toggleSorting: (desc: boo
     <Button
       variant="ghost"
       size="sm"
-      className="font-bold"
+      className="text-xs font-bold"
       onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
     >
       {label}
@@ -26,7 +26,7 @@ export function buildVendorColumns(onVendorClick: (vendor: VendorInfo) => void):
       cell: ({ row }) => (
         <button
           type="button"
-          className="font-medium text-primary hover:underline text-left"
+          className="block w-full truncate font-medium text-primary hover:underline text-left"
           onClick={() => onVendorClick(row.original)}
         >
           {row.getValue('name')}
@@ -47,18 +47,6 @@ export function buildVendorColumns(onVendorClick: (vendor: VendorInfo) => void):
       accessorKey: 'owner',
       header: ({ column }) => <SortableHeader column={column} label="Owner" />,
       cell: ({ row }) => row.getValue('owner') ?? '—',
-    },
-    {
-      accessorKey: 'hide',
-      header: () => <span className="font-bold text-sm">Hidden</span>,
-      cell: ({ row }) => {
-        const hidden = row.getValue('hide') as boolean | undefined;
-        return hidden ? (
-          <span className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Yes</span>
-        ) : (
-          <span className="text-xs text-muted-foreground">No</span>
-        );
-      },
     },
   ];
 }

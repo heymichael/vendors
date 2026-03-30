@@ -13,7 +13,7 @@ export interface VendorInfo {
   department?: string;
   purpose?: string;
   spendType?: string;
-  hide?: boolean;
+
   contractStartDate?: string;
   contractEndDate?: string;
   contractLengthMonths?: number;
