@@ -1,16 +1,19 @@
 export interface VendorInfo {
   id: string;
   name: string;
-  billcomId?: string;
+  sourceSystem?: string;
+  sourceSystemId?: string;
   nameLower?: string;
   paymentMethod?: string | null;
   accountType?: string | null;
   track1099?: boolean;
-  toolCall?: string;
   lastSyncedAt?: string;
   owner?: string;
+  ownerId?: string;
   secondaryOwner?: string;
+  secondaryOwnerId?: string;
   department?: string;
+  departmentId?: string;
   purpose?: string;
   spendType?: string;
 

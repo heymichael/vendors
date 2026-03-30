@@ -122,9 +122,9 @@ interface VendorDetailProps {
 }
 
 type FormState = {
-  owner: string;
-  secondaryOwner: string;
-  department: string;
+  ownerId: string;
+  secondaryOwnerId: string;
+  departmentId: string;
   purpose: string;
   spendType: string;
   contractStartDate: string;
@@ -139,9 +139,9 @@ type FormState = {
 
 function vendorToForm(v: VendorInfo): FormState {
   return {
-    owner: v.owner ?? '',
-    secondaryOwner: v.secondaryOwner ?? '',
-    department: v.department ?? '',
+    ownerId: v.ownerId ?? '',
+    secondaryOwnerId: v.secondaryOwnerId ?? '',
+    departmentId: v.departmentId ?? '',
     purpose: v.purpose ?? '',
     spendType: v.spendType ?? '',
     contractStartDate: v.contractStartDate ?? '',
@@ -173,9 +173,15 @@ function formToUpdates(form: FormState, original: VendorInfo): Record<string, un
 }
 
 interface PlatformUser {
+  id?: string;
   email: string;
   firstName: string;
   lastName: string;
+}
+
+interface Department {
+  id: string;
+  name: string;
 }
 
 function userDisplayName(u: PlatformUser): string {
@@ -190,6 +196,7 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [vendorMembers, setVendorMembers] = useState<PlatformUser[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
 
   useEffect(() => {
     if (vendor && open) {
@@ -201,9 +208,15 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    agentFetch('/users?role=user&role=admin', getIdToken)
-      .then((r) => r.json())
-      .then((data: PlatformUser[]) => { if (!cancelled) setVendorMembers(data); })
+    Promise.all([
+      agentFetch('/users?role=user&role=admin', getIdToken).then((r) => r.json()),
+      agentFetch('/departments', getIdToken).then((r) => r.json()),
+    ])
+      .then(([users, depts]: [PlatformUser[], Department[]]) => {
+        if (cancelled) return;
+        setVendorMembers(users);
+        setDepartments(depts);
+      })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [open]);
@@ -257,8 +270,13 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
   if (!vendor || !form) return null;
 
   const memberOptions = vendorMembers.map((u) => ({
-    value: userDisplayName(u),
+    value: u.id ?? u.email,
     label: userDisplayName(u),
+  }));
+
+  const departmentOptions = departments.map((d) => ({
+    value: d.id,
+    label: d.name,
   }));
 
   return (
@@ -280,20 +298,18 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
             )}
           </DialogTitle>
           <DialogDescription>
-            {vendor.billcomId ? `Bill.com ID: ${vendor.billcomId}` : 'Manually added vendor'}
+            {vendor.sourceSystem ? `${vendor.sourceSystem} vendor` : 'Manually added vendor'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Bill.com Data (read-only) */}
+          {/* Source data (read-only) */}
           <section>
-            <h3 className="text-sm font-semibold mb-2">Bill.com Data</h3>
-            <Separator className="mb-3" />
-            <DetailRow label="Bill.com ID" value={vendor.billcomId} />
+            <DetailRow label="Source system ID" value={vendor.sourceSystemId} />
             <DetailRow label="Payment method" value={vendor.paymentMethod} />
             <DetailRow label="Account type" value={vendor.accountType} />
             <DetailRow label="Track 1099" value={vendor.track1099 ? 'Yes' : 'No'} />
-            <DetailRow label="Source" value={vendor.toolCall} />
+            <DetailRow label="Source" value={vendor.sourceSystem} />
             <DetailRow label="Last synced" value={formatDate(vendor.lastSyncedAt)} />
           </section>
 
@@ -305,17 +321,22 @@ export function VendorDetail({ vendor, open, onClose, editing: editingProp = fal
               <>
                 <SelectRow
                   label="Owner"
-                  value={form.owner}
-                  onChange={(v) => updateField('owner', v)}
+                  value={form.ownerId}
+                  onChange={(v) => updateField('ownerId', v)}
                   options={memberOptions}
                 />
                 <SelectRow
                   label="Secondary owner"
-                  value={form.secondaryOwner}
-                  onChange={(v) => updateField('secondaryOwner', v)}
+                  value={form.secondaryOwnerId}
+                  onChange={(v) => updateField('secondaryOwnerId', v)}
                   options={memberOptions}
                 />
-                <EditRow label="Department" value={form.department} onChange={(v) => updateField('department', v)} />
+                <SelectRow
+                  label="Department"
+                  value={form.departmentId}
+                  onChange={(v) => updateField('departmentId', v)}
+                  options={departmentOptions}
+                />
                 <EditRow label="Purpose" value={form.purpose} onChange={(v) => updateField('purpose', v)} />
                 <EditRow label="Spend type" value={form.spendType} onChange={(v) => updateField('spendType', v)} />
               </>
