@@ -160,7 +160,7 @@ export function VendorConfirmEdit({
 
       return (
         <Select value={val || undefined} onValueChange={(v) => updateValue(field.key, v)}>
-          <SelectTrigger className="h-7 w-[180px] text-xs">
+          <SelectTrigger className="h-7 min-w-[140px] max-w-[200px] text-xs">
             <SelectValue placeholder="Select…" />
           </SelectTrigger>
           <SelectContent>
@@ -176,14 +176,14 @@ export function VendorConfirmEdit({
       <Input
         value={val}
         onChange={(e) => updateValue(field.key, e.target.value)}
-        className="h-7 w-[180px] text-xs"
+        className="h-7 min-w-[140px] max-w-[200px] text-xs"
       />
     );
   }
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel(); }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{vendorName}</DialogTitle>
           <DialogDescription className="sr-only">Confirm vendor changes</DialogDescription>
@@ -191,11 +191,11 @@ export function VendorConfirmEdit({
 
         <div className="space-y-3 py-2">
           {displayFields.map((field) => (
-            <div key={field.key} className="flex items-center gap-3">
-              <span className="w-[130px] shrink-0 text-sm text-muted-foreground">
+            <div key={field.key} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="shrink-0 text-sm text-muted-foreground">
                 {field.label}
               </span>
-              <span className="text-sm text-muted-foreground truncate max-w-[100px]">
+              <span className="text-sm text-muted-foreground truncate">
                 {field.currentDisplay}
               </span>
               <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
