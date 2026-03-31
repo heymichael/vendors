@@ -15,6 +15,7 @@ import { SpendToolbar } from './SpendToolbar';
 import type { SpendViewMode } from './SpendToolbar';
 import { SpendDataView } from './SpendDataView';
 import { VendorList } from './VendorList';
+import { VendorConfirmEdit } from './VendorConfirmEdit';
 import { useAuthUser } from './auth/AuthUserContext';
 import { useVendors } from './useVendors';
 import { fetchVendorSpend } from './fetchVendorSpend';
@@ -53,6 +54,7 @@ export function App() {
   const [spendViewMode, setSpendViewMode] = useState<SpendViewMode>('chart');
   const [editVendorId, setEditVendorId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ChatPendingAction | null>(null);
+  const [editQueue, setEditQueue] = useState<ChatPendingAction[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [railExpanded, toggleRail] = useRailExpanded();
   const [chatOpen, setChatOpen] = useState(true);
@@ -65,13 +67,19 @@ export function App() {
     if (toolNames.some((t) => WRITE_TOOLS.has(t))) refreshVendors();
   }, [refreshVendors]);
 
-  const handlePendingAction = useCallback((action: ChatPendingAction) => {
-    if (action.type === 'confirm_delete') {
-      setPendingDelete(action);
-    } else if (action.type === 'open_edit') {
-      paneRef.current?.togglePane('data');
-      setEditVendorId(action.vendor_id as string);
+  const handlePendingActions = useCallback((actions: ChatPendingAction[]) => {
+    const edits: ChatPendingAction[] = [];
+    for (const action of actions) {
+      if (action.type === 'confirm_delete') {
+        setPendingDelete(action);
+      } else if (action.type === 'open_edit') {
+        paneRef.current?.togglePane('data');
+        setEditVendorId(action.vendor_id as string);
+      } else if (action.type === 'confirm_edit') {
+        edits.push(action);
+      }
     }
+    if (edits.length) setEditQueue((prev) => [...prev, ...edits]);
   }, []);
 
   const confirmDelete = useCallback(async () => {
@@ -101,6 +109,24 @@ export function App() {
     }
     setPendingDelete(null);
   }, [pendingDelete]);
+
+  const pendingEdit = editQueue[0] ?? null;
+
+  const confirmEdit = useCallback(() => {
+    if (pendingEdit) {
+      chatRef.current?.addMessage({ role: 'assistant', content: `**${pendingEdit.vendor_name as string}** has been updated.` });
+      refreshVendors();
+    }
+    setEditQueue((prev) => prev.slice(1));
+  }, [pendingEdit, refreshVendors]);
+
+  const cancelEdit = useCallback(() => {
+    if (pendingEdit) {
+      chatRef.current?.addMessage({ role: 'assistant', content: `Changes to **${pendingEdit.vendor_name as string}** were cancelled.` });
+      chatRef.current?.addMessage({ role: 'user', content: `I cancelled the edit. If I ask to modify this vendor again, call modify_vendor again.`, hidden: true });
+    }
+    setEditQueue((prev) => prev.slice(1));
+  }, [pendingEdit]);
 
   const handlePaneToggle = useCallback((id: PaneId) => {
     paneRef.current?.togglePane(id);
@@ -221,7 +247,7 @@ export function App() {
               appContext="vendors"
               getIdToken={authUser.getIdToken}
               onToolResult={handleToolResult}
-              onPendingAction={handlePendingAction}
+              onPendingAction={handlePendingActions}
             />
           }
           analyticsContent={
@@ -296,6 +322,22 @@ export function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {pendingEdit && (
+        <VendorConfirmEdit
+          vendorId={pendingEdit.vendor_id as string}
+          vendorName={pendingEdit.vendor_name as string}
+          displayFields={pendingEdit.display_fields as Array<{
+            key: string; label: string;
+            currentValue?: string | null; currentDisplay: string;
+            newValue: string; newDisplay: string;
+            inputType: 'select' | 'text'; source?: string; options?: string[];
+          }>}
+          open
+          onConfirm={confirmEdit}
+          onCancel={cancelEdit}
+        />
       )}
     </div>
   );
