@@ -2,18 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Separator,
   Button,
-  Input,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
   agentFetch,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DetailRow,
+  EditRow,
+  SelectRow,
+  CheckboxRow,
 } from '@haderach/shared-ui';
 import { useAuthUser } from './auth/AuthUserContext';
 import { Loader2, Pencil } from 'lucide-react';
@@ -33,85 +31,6 @@ function formatDate(iso?: string | null): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-interface DetailRowProps {
-  label: string;
-  value?: string | null;
-}
-
-function DetailRow({ label, value }: DetailRowProps) {
-  return (
-    <div className="grid grid-cols-[160px_1fr] gap-2 py-1.5">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm">{value || '—'}</span>
-    </div>
-  );
-}
-
-interface EditRowProps {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-}
-
-function EditRow({ label, value, onChange, type = 'text' }: EditRowProps) {
-  return (
-    <div className="grid grid-cols-[160px_1fr] gap-2 py-1.5 items-center">
-      <label className="text-sm text-muted-foreground">{label}</label>
-      <Input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-8 text-sm"
-      />
-    </div>
-  );
-}
-
-interface SelectRowProps {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}
-
-function SelectRow({ label, value, onChange, options }: SelectRowProps) {
-  return (
-    <div className="grid grid-cols-[160px_1fr] gap-2 py-1.5 items-center">
-      <label className="text-sm text-muted-foreground">{label}</label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="h-8 text-sm">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
-
-interface CheckboxRowProps {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}
-
-function CheckboxRow({ label, checked, onChange }: CheckboxRowProps) {
-  return (
-    <div className="grid grid-cols-[160px_1fr] gap-2 py-1.5 items-center">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-input accent-primary"
-      />
-    </div>
-  );
-}
 
 interface VendorDetailProps {
   vendor: VendorInfo | null;

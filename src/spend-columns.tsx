@@ -1,19 +1,7 @@
-import type { ColumnDef } from '@haderach/shared-ui';
+import type { ColumnDef, PivotRow } from '@haderach/shared-ui';
+import { formatCurrency, formatMonthHeader } from '@haderach/shared-ui';
 
-const currencyFmt = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
-  minimumFractionDigits: 0,
-});
-
-function formatMonthHeader(month: string): string {
-  const [y, m] = month.split('-');
-  const date = new Date(Number(y), Number(m) - 1);
-  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-}
-
-export type PivotRow = Record<string, string | number>;
+export type { PivotRow };
 
 export function buildSpendColumns(months: string[]): ColumnDef<PivotRow>[] {
   const vendorCol: ColumnDef<PivotRow> = {
@@ -38,7 +26,7 @@ export function buildSpendColumns(months: string[]): ColumnDef<PivotRow>[] {
     ),
     cell: ({ row }) => {
       const val = row.getValue(month) as number;
-      return val ? currencyFmt.format(val) : '—';
+      return val ? formatCurrency(val) : '—';
     },
   }));
 
