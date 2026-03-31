@@ -328,7 +328,6 @@ export function App() {
         <VendorConfirmEdit
           vendorId={pendingEdit.vendor_id as string}
           vendorName={pendingEdit.vendor_name as string}
-          proposedUpdates={pendingEdit.proposed_updates as Record<string, unknown>}
           displayFields={pendingEdit.display_fields as Array<{
             key: string; label: string;
             currentValue?: string | null; currentDisplay: string;

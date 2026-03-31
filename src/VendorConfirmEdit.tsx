@@ -38,7 +38,6 @@ interface OptionItem {
 interface VendorConfirmEditProps {
   vendorId: string;
   vendorName: string;
-  proposedUpdates: Record<string, unknown>;
   displayFields: DisplayField[];
   open: boolean;
   onConfirm: () => void;
@@ -53,7 +52,6 @@ const SOURCE_ENDPOINTS: Record<string, string> = {
 export function VendorConfirmEdit({
   vendorId,
   vendorName,
-  proposedUpdates,
   displayFields,
   open,
   onConfirm,
