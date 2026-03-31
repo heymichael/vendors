@@ -15,6 +15,7 @@ import { SpendToolbar } from './SpendToolbar';
 import type { SpendViewMode } from './SpendToolbar';
 import { SpendDataView } from './SpendDataView';
 import { VendorList } from './VendorList';
+import { VendorConfirmEdit } from './VendorConfirmEdit';
 import { useAuthUser } from './auth/AuthUserContext';
 import { useVendors } from './useVendors';
 import { fetchVendorSpend } from './fetchVendorSpend';
@@ -53,6 +54,7 @@ export function App() {
   const [spendViewMode, setSpendViewMode] = useState<SpendViewMode>('chart');
   const [editVendorId, setEditVendorId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ChatPendingAction | null>(null);
+  const [pendingEdit, setPendingEdit] = useState<ChatPendingAction | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [railExpanded, toggleRail] = useRailExpanded();
   const [chatOpen, setChatOpen] = useState(true);
@@ -71,6 +73,8 @@ export function App() {
     } else if (action.type === 'open_edit') {
       paneRef.current?.togglePane('data');
       setEditVendorId(action.vendor_id as string);
+    } else if (action.type === 'confirm_edit') {
+      setPendingEdit(action);
     }
   }, []);
 
@@ -101,6 +105,22 @@ export function App() {
     }
     setPendingDelete(null);
   }, [pendingDelete]);
+
+  const confirmEdit = useCallback(() => {
+    if (pendingEdit) {
+      chatRef.current?.addMessage({ role: 'assistant', content: `**${pendingEdit.vendor_name as string}** has been updated.` });
+      refreshVendors();
+    }
+    setPendingEdit(null);
+  }, [pendingEdit, refreshVendors]);
+
+  const cancelEdit = useCallback(() => {
+    if (pendingEdit) {
+      chatRef.current?.addMessage({ role: 'assistant', content: `Changes to **${pendingEdit.vendor_name as string}** were cancelled.` });
+      chatRef.current?.addMessage({ role: 'user', content: `I cancelled the edit. If I ask to modify this vendor again, call modify_vendor again.`, hidden: true });
+    }
+    setPendingEdit(null);
+  }, [pendingEdit]);
 
   const handlePaneToggle = useCallback((id: PaneId) => {
     paneRef.current?.togglePane(id);
@@ -296,6 +316,23 @@ export function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {pendingEdit && (
+        <VendorConfirmEdit
+          vendorId={pendingEdit.vendor_id as string}
+          vendorName={pendingEdit.vendor_name as string}
+          proposedUpdates={pendingEdit.proposed_updates as Record<string, unknown>}
+          displayFields={pendingEdit.display_fields as Array<{
+            key: string; label: string;
+            currentValue?: string | null; currentDisplay: string;
+            newValue: string; newDisplay: string;
+            inputType: 'select' | 'text'; source?: string; options?: string[];
+          }>}
+          open
+          onConfirm={confirmEdit}
+          onCancel={cancelEdit}
+        />
       )}
     </div>
   );
