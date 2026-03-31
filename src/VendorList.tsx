@@ -50,6 +50,7 @@ export function VendorList({ vendors, editVendorId, onEditDone }: VendorListProp
         data={vendors}
         pinFirstColumn
         enableSearch
+        enableColumnFilters
       />
       <VendorDetail
         vendor={selectedVendor}

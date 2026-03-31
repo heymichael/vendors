@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { ColumnDef } from '@haderach/shared-ui';
-import { Button } from '@haderach/shared-ui';
+import { Button, FilterableHeader, setFilterFn } from '@haderach/shared-ui';
 import { ArrowUpDown } from 'lucide-react';
 import type { VendorInfo } from './types';
 
@@ -35,17 +35,20 @@ export function buildVendorColumns(onVendorClick: (vendor: VendorInfo) => void):
     },
     {
       accessorKey: 'accountType',
-      header: ({ column }) => <SortableHeader column={column} label="Account Type" />,
+      header: ({ column }) => <FilterableHeader column={column} label="Account Type" />,
+      filterFn: setFilterFn,
       cell: ({ row }) => row.getValue('accountType') ?? '—',
     },
     {
       accessorKey: 'department',
-      header: ({ column }) => <SortableHeader column={column} label="Department" />,
+      header: ({ column }) => <FilterableHeader column={column} label="Department" />,
+      filterFn: setFilterFn,
       cell: ({ row }) => row.getValue('department') ?? '—',
     },
     {
       accessorKey: 'owner',
-      header: ({ column }) => <SortableHeader column={column} label="Owner" />,
+      header: ({ column }) => <FilterableHeader column={column} label="Owner" />,
+      filterFn: setFilterFn,
       cell: ({ row }) => row.getValue('owner') ?? '—',
     },
   ];

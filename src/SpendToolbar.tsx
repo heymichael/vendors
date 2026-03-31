@@ -67,7 +67,6 @@ export function SpendToolbar({
           selectedIds={selectedDepartments}
           onSelectionChange={onDepartmentsChange}
           searchPlaceholder="Search departments…"
-          variant="underline"
         />
       </div>
 
@@ -80,7 +79,6 @@ export function SpendToolbar({
           selectedIds={selectedVendors}
           onSelectionChange={onVendorsChange}
           searchPlaceholder="Search vendors…"
-          variant="underline"
         />
       </div>
 
@@ -91,7 +89,7 @@ export function SpendToolbar({
           </label>
           <input
             type="date"
-            className="h-8 w-[120px] border-b border-border bg-transparent pb-1 text-xs outline-none [&::-webkit-calendar-picker-indicator]:h-3.5 [&::-webkit-calendar-picker-indicator]:w-3.5 [&::-webkit-calendar-picker-indicator]:opacity-60"
+            className="h-8 w-[120px] bg-transparent text-xs outline-none [&::-webkit-calendar-picker-indicator]:h-3.5 [&::-webkit-calendar-picker-indicator]:w-3.5 [&::-webkit-calendar-picker-indicator]:opacity-60"
             value={dateFrom}
             onChange={(e) => onDateFromChange(e.target.value)}
           />
@@ -102,7 +100,7 @@ export function SpendToolbar({
           </label>
           <input
             type="date"
-            className="h-8 w-[120px] border-b border-border bg-transparent pb-1 text-xs outline-none [&::-webkit-calendar-picker-indicator]:h-3.5 [&::-webkit-calendar-picker-indicator]:w-3.5 [&::-webkit-calendar-picker-indicator]:opacity-60"
+            className="h-8 w-[120px] bg-transparent text-xs outline-none [&::-webkit-calendar-picker-indicator]:h-3.5 [&::-webkit-calendar-picker-indicator]:w-3.5 [&::-webkit-calendar-picker-indicator]:opacity-60"
             value={dateTo}
             onChange={(e) => onDateToChange(e.target.value)}
           />
