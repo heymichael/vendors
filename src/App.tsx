@@ -16,6 +16,7 @@ import type { SpendViewMode } from './SpendToolbar';
 import { SpendDataView } from './SpendDataView';
 import { VendorList } from './VendorList';
 import { VendorConfirmEdit } from './VendorConfirmEdit';
+import { VendorConfirmCsvBatch } from './VendorConfirmCsvBatch';
 import { useAuthUser } from './auth/AuthUserContext';
 import { useVendors } from './useVendors';
 import { fetchVendorSpend } from './fetchVendorSpend';
@@ -34,7 +35,7 @@ function sixMonthsAgoISO(): string {
   return d.toISOString().slice(0, 10);
 }
 
-const WRITE_TOOLS = new Set(['add_vendor', 'delete_vendor', 'modify_vendor']);
+const WRITE_TOOLS = new Set(['add_vendor', 'delete_vendor', 'modify_vendor', 'process_vendor_csv']);
 
 export function App() {
   const { vendors, loading: vendorsLoading, error: vendorsError, refresh: refreshVendors } = useVendors();
@@ -55,6 +56,7 @@ export function App() {
   const [editVendorId, setEditVendorId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ChatPendingAction | null>(null);
   const [editQueue, setEditQueue] = useState<ChatPendingAction[]>([]);
+  const [pendingCsvBatch, setPendingCsvBatch] = useState<ChatPendingAction | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [railExpanded, toggleRail] = useRailExpanded();
   const [chatOpen, setChatOpen] = useState(true);
@@ -70,7 +72,9 @@ export function App() {
   const handlePendingActions = useCallback((actions: ChatPendingAction[]) => {
     const edits: ChatPendingAction[] = [];
     for (const action of actions) {
-      if (action.type === 'confirm_delete') {
+      if (action.type === 'confirm_csv_batch') {
+        setPendingCsvBatch(action);
+      } else if (action.type === 'confirm_delete') {
         setPendingDelete(action);
       } else if (action.type === 'open_edit') {
         paneRef.current?.togglePane('data');
@@ -127,6 +131,26 @@ export function App() {
     }
     setEditQueue((prev) => prev.slice(1));
   }, [pendingEdit]);
+
+  const confirmCsvBatch = useCallback(() => {
+    if (pendingCsvBatch) {
+      const summary = pendingCsvBatch.summary as { vendor_count: number } | undefined;
+      const count = summary?.vendor_count ?? 0;
+      chatRef.current?.addMessage({
+        role: 'assistant',
+        content: `Batch update complete — **${count}** vendor${count === 1 ? '' : 's'} updated.`,
+      });
+      refreshVendors();
+    }
+    setPendingCsvBatch(null);
+  }, [pendingCsvBatch, refreshVendors]);
+
+  const cancelCsvBatch = useCallback(() => {
+    if (pendingCsvBatch) {
+      chatRef.current?.addMessage({ role: 'assistant', content: 'Batch update was cancelled.' });
+    }
+    setPendingCsvBatch(null);
+  }, [pendingCsvBatch]);
 
   const handlePaneToggle = useCallback((id: PaneId) => {
     paneRef.current?.togglePane(id);
@@ -337,6 +361,16 @@ export function App() {
           open
           onConfirm={confirmEdit}
           onCancel={cancelEdit}
+        />
+      )}
+
+      {pendingCsvBatch && (
+        <VendorConfirmCsvBatch
+          updates={pendingCsvBatch.updates as Array<{ vendor_id: string; changes: Record<string, unknown> }>}
+          summary={pendingCsvBatch.summary as { vendor_count: number; field_counts: Record<string, number> }}
+          open
+          onConfirm={confirmCsvBatch}
+          onCancel={cancelCsvBatch}
         />
       )}
     </div>
