@@ -366,7 +366,7 @@ export function App() {
 
       {pendingCsvBatch && (
         <VendorConfirmCsvBatch
-          updates={pendingCsvBatch.updates as Array<{ vendor_id: string; changes: Record<string, unknown> }>}
+          updates={pendingCsvBatch.updates as Array<{ vendor_id: string; vendor_name: string; changes: Record<string, unknown>; display_changes: Array<{ label: string; from: string; to: string }> }>}
           summary={pendingCsvBatch.summary as { vendor_count: number; field_counts: Record<string, number> }}
           open
           onConfirm={confirmCsvBatch}
