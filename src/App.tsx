@@ -247,6 +247,8 @@ export function App() {
         userPhotoURL={authUser.photoURL}
         userDisplayName={authUser.displayName}
         onSignOut={authUser.signOut}
+        openPanes={{ chat: chatOpen, analytics: detailPane === 'analytics', data: detailPane === 'data' }}
+        getIdToken={authUser.getIdToken}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
