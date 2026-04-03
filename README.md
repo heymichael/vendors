@@ -30,8 +30,11 @@ vendors/
 │   ├── rules/
 │   │   ├── architecture-pointer.mdc
 │   │   ├── branch-safety-reminder.mdc
+│   │   ├── cross-repo-status.mdc
+│   │   ├── local-dev-testing.mdc
 │   │   ├── pr-conventions.mdc
 │   │   ├── repo-hygiene.mdc
+│   │   ├── service-oriented-data-access.mdc
 │   │   └── todo-conventions.mdc
 │   └── skills/
 │       └── brand-guidelines/
@@ -39,6 +42,7 @@ vendors/
 ├── .github/
 │   ├── pull_request_template.md
 │   └── workflows/
+│       ├── ci.yml
 │       └── publish-artifact.yml
 ├── docs/
 │   └── architecture.md
@@ -56,20 +60,18 @@ vendors/
 │   │   ├── AuthGate.tsx
 │   │   ├── AuthUserContext.ts
 │   │   └── runtimeConfig.ts
-│   ├── components/
-│   │   └── ui/
-│   │       └── dialog.tsx
 │   ├── App.tsx
 │   ├── App.css
-│   ├── ChatPanel.tsx
-│   ├── ChatToggle.tsx
-│   ├── Controls.tsx
 │   ├── SpendChart.tsx
 │   ├── SpendDataView.tsx
 │   ├── SpendTable.tsx
+│   ├── SpendToolbar.tsx
+│   ├── VendorConfirmCsvBatch.tsx
+│   ├── VendorConfirmEdit.tsx
 │   ├── VendorDetail.tsx
-│   ├── VendorFilters.tsx
 │   ├── VendorList.tsx
+│   ├── fetchVendorSpend.ts
+│   ├── groupSpendRows.ts
 │   ├── index.css
 │   ├── main.tsx
 │   ├── spend-columns.tsx
@@ -79,6 +81,7 @@ vendors/
 │   └── vite-env.d.ts
 ├── .env.example
 ├── .gitignore
+├── eslint.config.js
 ├── firebase.json
 ├── index.html
 ├── package-lock.json
