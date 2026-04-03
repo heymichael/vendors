@@ -60,7 +60,7 @@ export function App() {
   const [deleting, setDeleting] = useState(false);
   const [railExpanded, toggleRail] = useRailExpanded();
   const [chatOpen, setChatOpen] = useState(true);
-  const [detailPane, setDetailPane] = useState<'analytics' | 'data' | null>('analytics');
+  const [detailPane, setDetailPane] = useState<'analytics' | 'data' | null>(null);
 
   const chatRef = useRef<ChatPanelHandle>(null);
   const paneRef = useRef<PaneLayoutHandle>(null);
