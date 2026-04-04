@@ -12,7 +12,7 @@ import {
   type User,
 } from 'firebase/auth'
 import { fetchUserDoc, buildDisplayName, hasAppAccess, getAccessibleApps, getAccessibleAdminApps, APP_CATALOG, ADMIN_CATALOG, APP_ID } from './accessPolicy'
-import { getAuthRuntimeConfig } from './runtimeConfig'
+import { getAuthRuntimeConfig } from '@haderach/shared-ui'
 import { AuthUserContext } from './AuthUserContext'
 import { Button } from '@haderach/shared-ui'
 

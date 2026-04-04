@@ -22,7 +22,6 @@ import { useVendors } from './useVendors';
 import { fetchVendorSpend } from './fetchVendorSpend';
 import { groupSpendRows } from './groupSpendRows';
 import type { SpendRow } from './types';
-import './App.css';
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
