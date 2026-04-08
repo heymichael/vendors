@@ -136,7 +136,21 @@ export function AuthGate({ children }: AuthGateProps) {
   }
 
   if (status === 'loading' || status === 'redirecting') {
-    return null
+    return (
+      <main className="auth-gate-shell">
+        <section className="auth-gate-card" aria-live="polite" aria-busy="true">
+          <div className="flex items-center gap-3">
+            <span
+              className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground"
+              aria-hidden="true"
+            />
+            <p className="text-sm text-muted-foreground">
+              {status === 'redirecting' ? 'Redirecting to sign-in...' : 'Loading...'}
+            </p>
+          </div>
+        </section>
+      </main>
+    )
   }
 
   if (status === 'sign_in') {
