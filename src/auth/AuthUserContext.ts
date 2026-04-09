@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react'
+import { useAuthUser as useSharedAuthUser } from '@haderach/shared-ui'
 import type { BaseAuthUser } from '@haderach/shared-ui'
 
 export interface AuthUser extends BaseAuthUser {
@@ -8,10 +8,6 @@ export interface AuthUser extends BaseAuthUser {
   isFinanceAdmin: boolean
 }
 
-export const AuthUserContext = createContext<AuthUser | null>(null)
-
 export function useAuthUser(): AuthUser {
-  const ctx = useContext(AuthUserContext)
-  if (!ctx) throw new Error('useAuthUser must be used within AuthGate')
-  return ctx
+  return useSharedAuthUser<AuthUser>()
 }
