@@ -9,7 +9,7 @@ import {
   agentFetch,
   useTableViewState,
 } from '@haderach/shared-ui';
-import type { ChatPanelHandle, ChatPendingAction, PaneId, PaneLayoutHandle, ColumnFiltersState, TableViewContext } from '@haderach/shared-ui';
+import type { ChatPanelHandle, ChatPendingAction, PaneId, PaneLayoutHandle, TableViewContext } from '@haderach/shared-ui';
 import { DEFAULT_COLUMNS } from './vendor-columns';
 
 import { Loader2 } from 'lucide-react';
