@@ -210,7 +210,13 @@ export function App() {
                 visibleColumns={tableView.visibleColumns}
                 onResetColumns={tableView.resetColumns}
                 columnFilters={tableView.columnFilters}
-                onColumnFiltersChange={tableView.setColumnFilters}
+                onColumnFiltersChange={(updaterOrValue) => {
+                  tableView.setColumnFilters(
+                    typeof updaterOrValue === 'function'
+                      ? updaterOrValue(tableView.columnFilters)
+                      : updaterOrValue,
+                  );
+                }}
                 onClearFilters={tableView.clearFilters}
                 isCustomView={tableView.isCustomView}
                 hasActiveFilters={tableView.hasActiveFilters}
