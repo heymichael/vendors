@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import {
   AppRail,
   useRailExpanded,
@@ -7,8 +7,10 @@ import {
   ChatPanel,
   Button,
   agentFetch,
+  useTableViewState,
 } from '@haderach/shared-ui';
-import type { ChatPanelHandle, ChatPendingAction, PaneId, PaneLayoutHandle } from '@haderach/shared-ui';
+import type { ChatPanelHandle, ChatPendingAction, PaneId, PaneLayoutHandle, TableViewContext } from '@haderach/shared-ui';
+import { DEFAULT_COLUMNS } from './vendor-columns';
 
 import { Loader2 } from 'lucide-react';
 import { VendorList } from './VendorList';
@@ -32,6 +34,17 @@ export function App() {
   const [chatOpen, setChatOpen] = useState(true);
   const [detailPane, setDetailPane] = useState<'analytics' | 'data' | null>('data');
 
+  const tableView = useTableViewState('vendors', DEFAULT_COLUMNS);
+
+  const tableViewContext = useMemo<TableViewContext>(() => ({
+    visibleColumns: tableView.visibleColumns ?? DEFAULT_COLUMNS,
+    activeFilters: tableView.columnFilters.map((f) => ({
+      column: f.id,
+      values: f.value as string[],
+    })),
+    dataPaneOpen: detailPane === 'data',
+  }), [tableView.visibleColumns, tableView.columnFilters, detailPane]);
+
   const chatRef = useRef<ChatPanelHandle>(null);
   const paneRef = useRef<PaneLayoutHandle>(null);
 
@@ -51,10 +64,20 @@ export function App() {
         setEditVendorId(action.vendor_id as string);
       } else if (action.type === 'confirm_edit') {
         edits.push(action);
+      } else if (action.type === 'set_columns') {
+        tableView.setVisibleColumns(action.view_columns as string[]);
+      } else if (action.type === 'set_filters') {
+        const agentFilters = action.table_filters as Array<{ column: string; values: string[] }>;
+        tableView.setColumnFilters(
+          agentFilters.map((f) => ({
+            id: f.column,
+            value: f.values.map((v) => (v === 'none' ? '' : v)),
+          })),
+        );
       }
     }
     if (edits.length) setEditQueue((prev) => [...prev, ...edits]);
-  }, []);
+  }, [tableView]);
 
   const confirmDelete = useCallback(async () => {
     if (!pendingDelete) return;
@@ -167,6 +190,7 @@ export function App() {
               ref={chatRef}
               mode="panel"
               appContext="vendors"
+              tableViewContext={tableViewContext}
               getIdToken={authUser.getIdToken}
               onToolResult={handleToolResult}
               onPendingAction={handlePendingActions}
@@ -183,6 +207,19 @@ export function App() {
                 vendors={vendors}
                 editVendorId={editVendorId}
                 onEditDone={() => { setEditVendorId(null); refreshVendors(); }}
+                visibleColumns={tableView.visibleColumns}
+                onResetColumns={tableView.resetColumns}
+                columnFilters={tableView.columnFilters}
+                onColumnFiltersChange={(updaterOrValue) => {
+                  tableView.setColumnFilters(
+                    typeof updaterOrValue === 'function'
+                      ? updaterOrValue(tableView.columnFilters)
+                      : updaterOrValue,
+                  );
+                }}
+                onClearFilters={tableView.clearFilters}
+                isCustomView={tableView.isCustomView}
+                hasActiveFilters={tableView.hasActiveFilters}
               />
             </div>
           }
