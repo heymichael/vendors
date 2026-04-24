@@ -5,12 +5,18 @@ alwaysApply: true
 
 # App Boundary Rule
 
-This repository is a single app repository integrated into the haderach platform control plane.
+This repository is the vendor spend app: a React SPA plus the co-located
+`vendors-api` service for spend-domain backend work.
 
 - Keep strict separation of concerns:
-  - This repo owns app-local implementation patterns, CI patterns, and artifact publish contracts.
-  - Platform orchestration, promotion, and cross-app routing checks remain outside this repo.
-- Keep app logic and app tests in this repository; do not add platform orchestration logic here.
+  - This repo owns the vendors frontend, the `service/` backend, app-local CI,
+    and artifact publish contracts.
+  - The shared agent service in `../agent/` owns shared chat, RBAC, and core
+    Postgres CRUD paths used by the app.
+  - Platform orchestration, promotion, and cross-app routing checks remain
+    outside this repo.
+- Keep vendor-domain logic and service tests in this repository; do not add
+  platform orchestration logic here.
 - Keep naming kebab-case for repo/path conventions unless language-specific rules require otherwise.
 - Prefer explicit docs and small config contracts over heavy scripts or premature automation.
 - Use or update docs when behavior/contracts change:

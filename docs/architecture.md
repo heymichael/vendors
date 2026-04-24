@@ -4,6 +4,11 @@
 
 The vendors app tracks monthly spend across software vendors (AWS, Cursor, GCS, etc.). It follows the same SPA + backend service pattern as the stocks app. All data flows through the agent service API (`/agent/api/`) — no direct Firestore access from the frontend.
 
+## Cursor Rules
+
+Workspace-level Cursor rule coverage and `alwaysApply` settings are tracked in
+`../haderach-platform/docs/cursor-rule-matrix.md`.
+
 ## Repo Layout
 
 ```text

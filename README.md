@@ -22,6 +22,9 @@ uvicorn app:app --port 5002
 npm run dev
 ```
 
+Workspace-level Cursor rule coverage is tracked in
+`../haderach-platform/docs/cursor-rule-matrix.md`.
+
 ## Repo layout
 
 ```text
